@@ -1,31 +1,39 @@
 ﻿using Fanex.Logging;
 using Fanex.Logging.Sentry.RavenClient;
 using SharpRaven;
+using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 
-namespace Fanex.Affiliate.Link;
-
-public static class LoggingConfig
+namespace Fanex.Affiliate.Link
 {
-    public static void RegisterSentry()
+    public static class LoggingConfig
     {
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true, reloadOnChange: true)
-            .AddEnvironmentVariables()
-            .Build();
-
-        var env = configuration["Sentry:Environment"];
-        var backEndDsn = configuration["Sentry:Dsn"];
-        var category = configuration["Sentry:LogCategory"];
-
-        LogManager.SetDefaultLogCategory(category).Use(new List<ILogEngine>
+        public static void RegisterSentry()
         {
-            new SentryLogging(new SentryEngineOptions
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            var env = configuration["AppSettings:Environment"];
+            var backEndDsn = configuration["AppSettings:SentryBackEndDsn"];
+            var category = configuration["AppSettings:LoggingCategory"];
+            var isRegisterSentry = string.Equals(configuration["AppSettings:IsRegisterSentry"], "true", StringComparison.CurrentCultureIgnoreCase);
+
+            if (isRegisterSentry && !string.IsNullOrEmpty(backEndDsn))
             {
-                Dsn = new Dsn(backEndDsn),
-                Environment = env
-            })
-        });
+                LogManager.SetDefaultLogCategory(category).Use(new List<ILogEngine>
+                {
+                    new SentryLogging(new SentryEngineOptions
+                    {
+                        Dsn = new Dsn(backEndDsn),
+                        Environment = env
+                    })
+                });
+            }
+        }
     }
 }
