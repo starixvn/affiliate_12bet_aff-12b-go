@@ -42,4 +42,12 @@ DbSettingProviderManager
 
 var host = builder.Build();
 host.MapGet("/", () => "Affiliate.Link.Consumer running!");
+host.MapGet("/sentry", async () =>
+{
+    var logService = host.Services.GetRequiredService<Fanex.Logging.ILogger>();
+    await logService.ErrorAsync("Consumer Test Sentry");
+
+    return "Consumer Test sentry!";
+});
+
 host.Run();

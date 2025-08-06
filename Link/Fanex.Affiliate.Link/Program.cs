@@ -1,4 +1,5 @@
 using EasyNetQ;
+using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Services;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using Fanex.Affiliate.Link.Extensions;
@@ -7,12 +8,11 @@ using Fanex.Affiliate.Link.Models.HealthCheck;
 using Fanex.Affiliate.Link.Services.HealthCheck;
 using Fanex.Affiliate.Link.Services.Impl;
 using Fanex.Affiliate.Link.Services.Interface;
-using Fanex.Caching;
-using Fanex.Caching.Redis;
 using Fanex.Data;
 using Fanex.Data.Repository;
 using ONEbook.UM.DependencyInjection;
 using ONEbook.UM.Services;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +32,6 @@ builder.Services.AddScoped<IAffInfoService, AffInfoService>();
 builder.Services.AddScoped<IMemoryCacheService, MemoryCacheService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 builder.Services.AddScoped<IHttpContextService, HttpContextService>();
-builder.Services.AddSingleton<ICacheService, CacheService>();
 builder.Services.AddSingleton<IDynamicRepository, DynamicRepository>();
 
 // Register health check services
@@ -52,10 +51,10 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-//var redis = ConnectionMultiplexer.Connect(
-//                builder.Configuration.GetSection("fanex.caching.redis:ConnectionOptions:EndPoints").Value);
+RedisConnectionHelper.Initialize(builder.Configuration);
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp => RedisConnectionHelper.Connection);
+builder.Services.AddSingleton<IRedisService, RedisService>();
 
-builder.Services.AddRedisCache(builder.Configuration.GetSection("fanex.caching.redis"));
 var rabbitMqConnectionString = builder.Configuration.GetValue<string>("RabbitMQConnectionString");
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton(RabbitHutch.CreateBus(rabbitMqConnectionString));

@@ -2,9 +2,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 {
     using Constants;
     using EasyNetQ;
-    using Fanex.Affiliate.Link.Criterias;
-    using Fanex.Affiliate.Link.Helpers;
-    using Fanex.Caching;
+    using Fanex.Affiliate.Link.Core.Services.Interfaces;
     using Fanex.Data.Repository;
     using Models.HealthCheck;
     using ONEbook.UM.Services;
@@ -17,7 +15,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
     public class HealthCheckService : IHealthCheckService
     {
         private readonly IDynamicRepository _dynamicRepository;
-        private readonly ICacheService _cacheService;
+        private readonly IRedisService _redisService;
         private readonly IBus _rabbitMqBus;
         private readonly IMaintenanceService _maintenanceService;
         private readonly IHealthCheckConfigurationService _configService;
@@ -28,7 +26,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
         public HealthCheckService(
             IDynamicRepository dynamicRepository,
-            ICacheService cacheService,
+            IRedisService redisService,
             IBus rabbitMqBus,
             IMaintenanceService maintenanceService,
             IHealthCheckConfigurationService configService,
@@ -37,14 +35,14 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             ILogger<HealthCheckService> logger)
         {
             _dynamicRepository = dynamicRepository ?? throw new ArgumentNullException(nameof(dynamicRepository));
-            _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+            _redisService = redisService ?? throw new ArgumentNullException(nameof(redisService));
             _rabbitMqBus = rabbitMqBus ?? throw new ArgumentNullException(nameof(rabbitMqBus));
             _maintenanceService = maintenanceService ?? throw new ArgumentNullException(nameof(maintenanceService));
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _historyService = historyService ?? throw new ArgumentNullException(nameof(historyService));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _startTime = DateTimeHelper.ServerTime;
+            _startTime = DateTimeOffset.UtcNow.DateTime;
         }
 
         public async Task<HealthStatus> GetHealthStatusAsync()
@@ -107,14 +105,14 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             // Test connect Database by the dynamic repository (external API service)
             try
             {
-                var criteria = new GetMaxClickIdCriteria();
-                var result = await _dynamicRepository.GetAsync<long>(criteria);
+                var testCriteria = new Criterias.BaseCriteria("Aff_Market_Sel");
+                var result = await _dynamicRepository.FetchAsync<dynamic>(testCriteria);
 
                 stopwatch.Stop();
 
-                if (result != 0)
+                if (result != null)
                 {
-                    return ComponentHealth.Healthy($"Database  - ClickId - {result}",
+                    return ComponentHealth.Healthy("Database",
                         "Database connection via DynamicRepository successful", stopwatch.Elapsed);
                 }
 
@@ -135,21 +133,17 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             try
             {
                 var testKey = $"health_check_{Guid.NewGuid()}";
-                var testValue = $"test_{DateTimeHelper.ServerTime:yyyyMMddHHmmss}";
+                var testValue = $"test_{DateTimeOffset.UtcNow:yyyyMMddHHmmss}";
 
-                // Test Redis connectivity with timeout
-                var cacheOptions = new Fanex.Caching.CacheItemOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(30));
-
-                await _cacheService.SetAsync(testKey, testValue, cacheOptions);
-                var retrievedValue = await _cacheService.GetAsync<string>(testKey);
+                await _redisService.SetAsync(testKey, testValue, TimeSpan.FromSeconds(30));
+                var retrievedValue = await _redisService.GetAsync<string>(testKey);
 
                 stopwatch.Stop();
 
                 if (retrievedValue == testValue)
                 {
                     // Clean up test key
-                    try { await _cacheService.RemoveAsync(testKey); } catch { /* Ignore cleanup errors */ }
+                    try { await _redisService.RemoveAsync(testKey); } catch { /* Ignore cleanup errors */ }
 
                     return ComponentHealth.Healthy("Redis",
                         $"Redis cache responding correctly (response time: {stopwatch.ElapsedMilliseconds}ms)", stopwatch.Elapsed);
@@ -296,7 +290,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                 {
                     MemoryUsedBytes = process.WorkingSet64,
                     ActiveThreads = process.Threads.Count,
-                    Uptime = DateTimeHelper.ServerTime - _startTime,
+                    Uptime = DateTimeOffset.UtcNow - _startTime,
                     Version = assembly.GetName().Version?.ToString() ?? "Unknown",
                     Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown",
                     AdditionalMetrics = new Dictionary<string, object>

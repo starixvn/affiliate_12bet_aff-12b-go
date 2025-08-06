@@ -1,4 +1,6 @@
-﻿namespace Fanex.Affiliate.Link.Core.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Fanex.Affiliate.Link.Core.Models;
 
 /// <summary>
 /// Represents a click tracking event for an affiliate link.
