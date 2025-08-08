@@ -109,11 +109,19 @@ public class RedisService: IRedisService
         });
     }
 
-    public async Task<RedisValue> ListLeftPopAsync<T>(string key)
+    public async Task<T> ListLeftPopAsync<T>(string key)
     {
         return await retryPolicy.ExecuteAsync(async () =>
         {
-            return await datatabse.ListLeftPopAsync(key);
+            var redisValue = await datatabse.ListLeftPopAsync(key);
+
+            var value = default(T);
+            if (!redisValue.IsNull)
+            {
+                value = RedisTypeConverter.ToObject<T>(redisValue);
+            }
+
+            return value;
         });
     }
 }

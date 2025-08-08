@@ -16,7 +16,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
     {
         private readonly IDynamicRepository _dynamicRepository;
         private readonly IRedisService _redisService;
-        private readonly IBus _rabbitMqBus;
+        //private readonly IBus _rabbitMqBus;
         private readonly IMaintenanceService _maintenanceService;
         private readonly IHealthCheckConfigurationService _configService;
         private readonly IHealthCheckHistoryService _historyService;
@@ -27,7 +27,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
         public HealthCheckService(
             IDynamicRepository dynamicRepository,
             IRedisService redisService,
-            IBus rabbitMqBus,
+          //  IBus rabbitMqBus,
             IMaintenanceService maintenanceService,
             IHealthCheckConfigurationService configService,
             IHealthCheckHistoryService historyService,
@@ -36,7 +36,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
         {
             _dynamicRepository = dynamicRepository ?? throw new ArgumentNullException(nameof(dynamicRepository));
             _redisService = redisService ?? throw new ArgumentNullException(nameof(redisService));
-            _rabbitMqBus = rabbitMqBus ?? throw new ArgumentNullException(nameof(rabbitMqBus));
+            //_rabbitMqBus = rabbitMqBus ?? throw new ArgumentNullException(nameof(rabbitMqBus));
             _maintenanceService = maintenanceService ?? throw new ArgumentNullException(nameof(maintenanceService));
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _historyService = historyService ?? throw new ArgumentNullException(nameof(historyService));
@@ -174,14 +174,14 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             try
             {
                 // Check RabbitMQ connection status
-                var isConnected = _rabbitMqBus.Advanced.IsConnected;
-                stopwatch.Stop();
+                //var isConnected = _rabbitMqBus.Advanced.IsConnected;
+                //stopwatch.Stop();
 
-                if (isConnected)
-                {
-                    return Task.FromResult(ComponentHealth.Healthy("RabbitMQ",
-                        "RabbitMQ connection is active", stopwatch.Elapsed));
-                }
+                //if (isConnected)
+                //{
+                //    return Task.FromResult(ComponentHealth.Healthy("RabbitMQ",
+                //        "RabbitMQ connection is active", stopwatch.Elapsed));
+                //}
 
                 return Task.FromResult(ComponentHealth.Warning("RabbitMQ",
                     "RabbitMQ connection is not active", stopwatch.Elapsed));

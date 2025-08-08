@@ -1,19 +1,17 @@
 ﻿using EasyNetQ;
 using EasyNetQ.Consumer;
 using EasyNetQ.Topology;
-using Fanex.Affiliate.Link.Commands;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Models;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
-using Fanex.Data.Repository;
 using ONEbook.UM.Services;
 
 namespace Fanex.Affiliate.Link.Consumer;
 
-public sealed class RabbitMqWorker(
+public sealed class ClickTrackingWorker(
     IBus bus,
     IMaintenanceService maintenanceService,
-    IDynamicRepository dynamicRepository,
+    IDatabaseService databaseService,
     ILogService logService) : BackgroundService
 {
     private IDisposable? consumerHandle;
@@ -96,7 +94,7 @@ public sealed class RabbitMqWorker(
             try
             {
                 logService.LogFileMessage($"[Consumer] Processing: {message.Body.ToString()}");
-                await InsertClickInfo(message.Body);
+                await databaseService.InsertClickInfo(message.Body);
                 await Task.FromResult(AckStrategies.Ack);
             }
             catch (Exception ex)
@@ -180,40 +178,5 @@ public sealed class RabbitMqWorker(
     {
         consumerHandle?.Dispose();
         return base.StopAsync(cancellationToken);
-    }
-
-    private async Task InsertClickInfo(ClickTrackingEvent clickTrackingEvent)
-    {
-        if (clickTrackingEvent is null)
-        {
-            logService.LogFileMessage("ClickTrackingEvent is null. Skipping insert.");
-            return;
-        }
-
-        var command = new ClickTrackingEventCommand
-        {
-            ClickId = clickTrackingEvent.ClickId,
-            AffCode = clickTrackingEvent.AffCode,
-            UpdatedTime = clickTrackingEvent.UpdatedTime,
-            IP = clickTrackingEvent.IP,
-            Browser = clickTrackingEvent.Browser,
-            URLReferrer = clickTrackingEvent.UrlReferrer,
-            DomainReferrer = clickTrackingEvent.DomainReferrer,
-            OS = clickTrackingEvent.OS,
-            Device = clickTrackingEvent.Device,
-            BrowserVersion = clickTrackingEvent.BrowserVersion,
-            BrowserResolution = clickTrackingEvent.BrowserResolution,
-            BrowserLanguage = clickTrackingEvent.BrowserLanguage,
-            UserAgent = clickTrackingEvent.UserAgent,
-            Country = clickTrackingEvent.Country,
-            LanguageCode = clickTrackingEvent.LanguageCode,
-            PageCode = clickTrackingEvent.PageCode,
-            RedirectURL = clickTrackingEvent.RedirectLink,
-            DeviceType = clickTrackingEvent.DeviceType,
-            AffMediaLink = clickTrackingEvent.AffMediaLink,
-            ChannelCode = clickTrackingEvent.ChannelCode
-        };
-
-        await dynamicRepository.ExecuteAsync(command);
     }
 }

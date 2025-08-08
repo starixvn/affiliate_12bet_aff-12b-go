@@ -23,6 +23,16 @@ public class LogService(Logging.ILogger logger) : ILogService
         await logger.ErrorAsync(errMsg, exception);
     }
 
+    public async Task SentryErrorAsync(string errMsg)
+    {
+        await logger.ErrorAsync(errMsg);
+    }
+
+    public async Task SentryErrorAsync(Exception exception)
+    {
+        await logger.ErrorAsync(exception.ToString());
+    }
+
     public async Task SentryInfoAsync(string info)
     {
         await logger.InfoAsync(info);

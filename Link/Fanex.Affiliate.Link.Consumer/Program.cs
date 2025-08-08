@@ -1,5 +1,7 @@
 using EasyNetQ;
 using Fanex.Affiliate.Link.Consumer;
+using Fanex.Affiliate.Link.Core;
+using Fanex.Affiliate.Link.Core.Services;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using Fanex.Data;
 using Fanex.Data.Repository;
@@ -9,16 +11,23 @@ using Microsoft.AspNetCore.Builder;
 using ONEbook.UM.DependencyInjection;
 using ONEbook.UM.Services;
 using SharpRaven;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHostedService<RabbitMqWorker>();
+//builder.Services.AddHostedService<ClickTrackingWorker>();
+//builder.Services.AddHostedService<ClickTrackingDLQWorker>();
+builder.Services.AddHostedService<ClickTrackingRedisStorageWorker>();
 var rabbitMqConnectionString = builder.Configuration.GetValue<string>("RabbitMQConnectionString");
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton(RabbitHutch.CreateBus(rabbitMqConnectionString));
 builder.Services.AddOneBookUmForService(builder.Configuration);
 builder.Services.AddSingleton<IMaintenanceService, MaintenanceService>();
 builder.Services.AddSingleton<IDynamicRepository, DynamicRepository>();
+builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+RedisConnectionHelper.Initialize(builder.Configuration);
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp => RedisConnectionHelper.Connection);
+builder.Services.AddSingleton<IRedisService, RedisService>();
 builder.Services.AddSingleton<Fanex.Logging.ILogger, Fanex.Logging.Logger>();
 builder.Services.AddSingleton<ILogService, Fanex.Affiliate.Link.Core.Services.LogService>();
 

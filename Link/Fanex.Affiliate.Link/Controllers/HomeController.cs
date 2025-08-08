@@ -26,7 +26,6 @@
         private readonly IClickTrackingEventService trackingSystemService;
         private readonly IAffInfoService affInfoService;
         private readonly IConfiguration configuration;
-        private readonly IMessageQueueService messageQueueService;
         private readonly IMaintenanceService maintenanceService;
         private readonly IHttpContextService httpContextService;
         private const string linkIsInvalidMessage = "Oops! This link does not exist. Please reach out to the administrator if you need help.";
@@ -36,7 +35,6 @@
         public HomeController(
             IClickTrackingEventService trackingSystemService,
             IAffInfoService affInfoService,
-            IMessageQueueService messageQueueService,
             IMaintenanceService maintenanceService,
             IConfiguration configuration,
             IHttpContextService httpContextService)
@@ -44,7 +42,6 @@
             this.trackingSystemService = trackingSystemService ?? throw new ArgumentNullException(nameof(trackingSystemService));
             this.affInfoService = affInfoService ?? throw new ArgumentNullException(nameof(affInfoService));
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            this.messageQueueService = messageQueueService;
             this.maintenanceService = maintenanceService;
             this.httpContextService = httpContextService ?? throw new ArgumentNullException(nameof(httpContextService));
             marketingForCommGroups = (this.configuration["AppSettings:MarketingForCommGroups"] ?? string.Empty)
@@ -169,7 +166,7 @@
             clickTrackingEvent.UpdatedTime = DateTimeHelper.GmtMinus4Now;
             clickTrackingEvent.RedirectLink = $"{clickTrackingEvent.RedirectLink}&clickId={clickId}";
 
-            await messageQueueService.PublishAsync(clickTrackingEvent);
+            await trackingSystemService.PublishMessage(clickTrackingEvent);
 
             var forwardQueryString = Request.QueryString.Value.ReplaceStr("?", "&");
             var redirectLink = $"{clickTrackingEvent.RedirectLink}{forwardQueryString}";

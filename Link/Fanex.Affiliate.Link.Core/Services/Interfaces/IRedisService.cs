@@ -21,5 +21,5 @@ public interface IRedisService
 
     Task<long> ListRightPushAsync<T>(string key, T value);
 
-    Task<RedisValue> ListLeftPopAsync<T>(string key);
+    Task<T> ListLeftPopAsync<T>(string key);
 }

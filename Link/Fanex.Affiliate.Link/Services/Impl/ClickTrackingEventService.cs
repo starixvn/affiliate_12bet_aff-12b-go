@@ -16,7 +16,10 @@
 
     public class ClickTrackingEventService(IDynamicRepository dynamicRepository,
         IMemoryCacheService memoryCacheService,
-        IRedisService redisService) : IClickTrackingEventService
+        IRabbitBus rabbitBus,
+        IRedisService redisService,
+        IDatabaseService databaseService,
+        ILogService logService) : IClickTrackingEventService
     {
         private const int CacheDurationInSeconds = 86400;
 
@@ -129,13 +132,13 @@
 
         public async Task<long> GetClickId()
         {
-            var clickIdFromCache = await redisService.StringGetAsync(CacheKey.ClickId);
+            var clickIdFromCache = await redisService.StringGetAsync(CacheKey.CLICKID);
             if (clickIdFromCache is null)
             {
                 await SyncMaxClickId(true);
             }
 
-            var result = await redisService.StringIncrementAsync(CacheKey.ClickId);
+            var result = await redisService.StringIncrementAsync(CacheKey.CLICKID);
             return result;
         }
 
@@ -145,10 +148,27 @@
             clickIdFromDatabase += 100;
             if (isSync)
             {
-                await redisService.StringSetAsync(CacheKey.ClickId, clickIdFromDatabase.ToString());
+                await redisService.StringSetAsync(CacheKey.CLICKID, clickIdFromDatabase.ToString());
             }
 
             return clickIdFromDatabase;
+        }
+
+        public async Task PublishMessage(ClickTrackingEvent clickTrackingEvent)
+        {
+            var isSuceess = await rabbitBus.PublishAsync(clickTrackingEvent);
+            if (!isSuceess)
+            {
+                try
+                {
+                    await redisService.ListRightPushAsync(CacheKey.CLICKQUEUES, clickTrackingEvent);
+                }
+                catch (Exception ex)
+                {
+                    await logService.SentryErrorAsync(ex);
+                    await databaseService.InsertClickInfo(clickTrackingEvent);
+                }
+            }
         }
 
         private async Task<long> GetMaxClickIdFromDatabase()
