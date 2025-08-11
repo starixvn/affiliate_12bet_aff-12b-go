@@ -12,7 +12,6 @@
     using System;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
 
     /// <summary>
@@ -167,10 +166,12 @@
                 OS = Common.GetOsName(userAgent),
                 Device = httpContextService.GetDeviceName(userAgent),
                 BrowserVersion = Common.GetBrowserVersion(userAgent),
+                BrowserResolution = string.Empty, // Will be set later if needed
                 BrowserLanguage = acceptLanguage,
                 UserAgent = userAgent,
                 Country = httpContextService.GetCountry(),
-                DeviceType = GetDeviceType()
+                DeviceType = GetDeviceType(),
+                RedirectLink = string.Empty // Will be set later in ProcessLink method
             };
 
             return clickTrackingEvent;

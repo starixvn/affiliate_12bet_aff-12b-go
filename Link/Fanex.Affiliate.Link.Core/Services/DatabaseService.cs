@@ -30,7 +30,8 @@ public class DatabaseService(IDynamicRepository dynamicRepository) : IDatabaseSe
             RedirectURL = clickTrackingEvent.RedirectLink,
             DeviceType = clickTrackingEvent.DeviceType,
             AffMediaLink = clickTrackingEvent.AffMediaLink,
-            ChannelCode = clickTrackingEvent.ChannelCode
+            ChannelCode = clickTrackingEvent.ChannelCode,
+            ErrMsg = string.Empty // Required property from BaseNonQueryCommand
         };
 
         await dynamicRepository.ExecuteAsync(command);

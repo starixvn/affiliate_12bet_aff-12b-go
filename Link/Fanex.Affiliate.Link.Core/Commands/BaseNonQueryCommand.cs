@@ -6,6 +6,6 @@ namespace Fanex.Affiliate.Link.Core.Commands
     {
         public int ErrCode { get; set; }
 
-        public string ErrMsg { get; set; }
+        public required string ErrMsg { get; set; }
     }
 }
