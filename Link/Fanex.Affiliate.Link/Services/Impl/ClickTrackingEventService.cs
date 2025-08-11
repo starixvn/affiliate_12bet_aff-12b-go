@@ -107,7 +107,7 @@
 
         public async Task<MasterInfoValidation> GetMasterDataForValidateClicked()
         {
-            var cacheKey = CacheKey.MASTER_DATA;
+            const string cacheKey = CacheKey.MASTER_DATA;
             var slidingExpirationTime = TimeSpan.FromSeconds(CacheDurationInSeconds);
             var masterInfoValidation = await redisService.GetAsync<MasterInfoValidation>(cacheKey);
 
@@ -142,10 +142,12 @@
             return result;
         }
 
-        public async Task<long> SyncMaxClickId(bool isSync = true)
+        public async Task<long> SyncMaxClickId(bool isSync)
         {
+            const int ClickIdIncrement = 100;
+
             var clickIdFromDatabase = await GetMaxClickIdFromDatabase();
-            clickIdFromDatabase += 100;
+            clickIdFromDatabase += ClickIdIncrement;
             if (isSync)
             {
                 await redisService.StringSetAsync(CacheKey.CLICKID, clickIdFromDatabase.ToString());

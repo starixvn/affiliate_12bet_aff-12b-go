@@ -1,7 +1,6 @@
 namespace Fanex.Affiliate.Link.Services.HealthCheck
 {
     using Constants;
-    using EasyNetQ;
     using Fanex.Affiliate.Link.Core.Services.Interfaces;
     using Fanex.Data.Repository;
     using Models.HealthCheck;
@@ -16,18 +15,15 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
     {
         private readonly IDynamicRepository _dynamicRepository;
         private readonly IRedisService _redisService;
-        //private readonly IBus _rabbitMqBus;
         private readonly IMaintenanceService _maintenanceService;
         private readonly IHealthCheckConfigurationService _configService;
         private readonly IHealthCheckHistoryService _historyService;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<HealthCheckService> _logger;
         private readonly DateTime _startTime;
 
         public HealthCheckService(
             IDynamicRepository dynamicRepository,
             IRedisService redisService,
-          //  IBus rabbitMqBus,
             IMaintenanceService maintenanceService,
             IHealthCheckConfigurationService configService,
             IHealthCheckHistoryService historyService,
@@ -36,11 +32,9 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
         {
             _dynamicRepository = dynamicRepository ?? throw new ArgumentNullException(nameof(dynamicRepository));
             _redisService = redisService ?? throw new ArgumentNullException(nameof(redisService));
-            //_rabbitMqBus = rabbitMqBus ?? throw new ArgumentNullException(nameof(rabbitMqBus));
             _maintenanceService = maintenanceService ?? throw new ArgumentNullException(nameof(maintenanceService));
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _historyService = historyService ?? throw new ArgumentNullException(nameof(historyService));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _startTime = DateTimeOffset.UtcNow.DateTime;
         }
@@ -128,6 +122,8 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
         public async Task<ComponentHealth> CheckRedisHealthAsync()
         {
+            const string RedisComponentName = "Redis";
+
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -143,26 +139,33 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                 if (retrievedValue == testValue)
                 {
                     // Clean up test key
-                    try { await _redisService.RemoveAsync(testKey); } catch { /* Ignore cleanup errors */ }
+                    try 
+                    { 
+                        await _redisService.RemoveAsync(testKey); 
+                    } 
+                    catch 
+                    { 
+                        /* Ignore cleanup errors */ 
+                    }
 
-                    return ComponentHealth.Healthy("Redis",
+                    return ComponentHealth.Healthy(RedisComponentName,
                         $"Redis cache responding correctly (response time: {stopwatch.ElapsedMilliseconds}ms)", stopwatch.Elapsed);
                 }
 
-                return ComponentHealth.Warning("Redis",
+                return ComponentHealth.Warning(RedisComponentName,
                     $"Redis cache test failed - expected '{testValue}', got '{retrievedValue}'", stopwatch.Elapsed);
             }
             catch (TimeoutException)
             {
                 stopwatch.Stop();
-                return ComponentHealth.Warning("Redis",
+                return ComponentHealth.Warning(RedisComponentName,
                     "Redis connection timeout (may be overloaded)", stopwatch.Elapsed);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
                 _logger.LogDebug(ex, "Redis health check failed");
-                return ComponentHealth.Warning("Redis",
+                return ComponentHealth.Warning(RedisComponentName,
                     $"Redis connection issue: {ex.Message}", stopwatch.Elapsed);
             }
         }
@@ -173,16 +176,6 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
             try
             {
-                // Check RabbitMQ connection status
-                //var isConnected = _rabbitMqBus.Advanced.IsConnected;
-                //stopwatch.Stop();
-
-                //if (isConnected)
-                //{
-                //    return Task.FromResult(ComponentHealth.Healthy("RabbitMQ",
-                //        "RabbitMQ connection is active", stopwatch.Elapsed));
-                //}
-
                 return Task.FromResult(ComponentHealth.Warning("RabbitMQ",
                     "RabbitMQ connection is not active", stopwatch.Elapsed));
             }
@@ -195,7 +188,13 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
         public Task<ComponentHealth> CheckRouteConstraintPerformanceAsync()
         {
+            const string RouteConstraintsComponentName = "Route Constraints";
+
             var stopwatch = Stopwatch.StartNew();
+
+            // Performance thresholds in milliseconds
+            const double SubMillisecondThreshold = 1.0;
+            const double WarningThreshold = 5.0;
 
             try
             {
@@ -224,29 +223,35 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
                 var avgTime = stopwatch.Elapsed.TotalMilliseconds / testUrls.Length;
 
-                if (avgTime < 1.0) // Should be sub-millisecond
+                if (avgTime < SubMillisecondThreshold) // Should be sub-millisecond
                 {
-                    return Task.FromResult(ComponentHealth.Healthy("Route Constraints",
+                    return Task.FromResult(ComponentHealth.Healthy(RouteConstraintsComponentName,
                         $"Average validation time: {avgTime:F3}ms", stopwatch.Elapsed));
                 }
-                else if (avgTime < 5.0)
+                else if (avgTime < WarningThreshold)
                 {
-                    return Task.FromResult(ComponentHealth.Warning("Route Constraints",
+                    return Task.FromResult(ComponentHealth.Warning(RouteConstraintsComponentName,
                         $"Validation slower than expected: {avgTime:F3}ms", stopwatch.Elapsed));
                 }
-
-                return Task.FromResult(ComponentHealth.Unhealthy("Route Constraints",
-                    $"Validation too slow: {avgTime:F3}ms", stopwatch.Elapsed));
+                else
+                {
+                    return Task.FromResult(ComponentHealth.Unhealthy(RouteConstraintsComponentName,
+                        $"Validation too slow: {avgTime:F3}ms", stopwatch.Elapsed));
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Route constraint performance check failed");
-                return Task.FromResult(ComponentHealth.Unhealthy("Route Constraints", ex.Message, stopwatch.Elapsed));
+                return Task.FromResult(ComponentHealth.Unhealthy(RouteConstraintsComponentName, ex.Message, stopwatch.Elapsed));
             }
         }
 
         public Task<ComponentHealth> CheckUnderMaintenanceServiceAsync()
         {
+            const string MaintenanceServiceName = "Maintenance Service";
+            const string WarningStatus = "Warning";
+            const string HealthyStatus = "Healthy";
+
             var stopwatch = Stopwatch.StartNew();
 
             try
@@ -254,14 +259,14 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                 var maintenanceTime = _maintenanceService.GetUnderMaintenanceTime();
                 stopwatch.Stop();
 
-                var status = maintenanceTime.IsUnderMaintenanceTime ? "Warning" : "Healthy";
+                var status = maintenanceTime.IsUnderMaintenanceTime ? WarningStatus : HealthyStatus;
                 var description = maintenanceTime.IsUnderMaintenanceTime
                     ? "System is currently under maintenance"
                     : "System is operational";
 
                 return Task.FromResult(new ComponentHealth
                 {
-                    Name = "Maintenance Service",
+                    Name = MaintenanceServiceName,
                     Status = status,
                     Description = description,
                     ResponseTime = stopwatch.Elapsed,
@@ -275,7 +280,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Under maintenance service health check failed");
-                return Task.FromResult(ComponentHealth.Unhealthy("Maintenance Service", ex.Message, stopwatch.Elapsed));
+                return Task.FromResult(ComponentHealth.Unhealthy(MaintenanceServiceName, ex.Message, stopwatch.Elapsed));
             }
         }
 
@@ -284,7 +289,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             try
             {
                 var process = Process.GetCurrentProcess();
-                var assembly = Assembly.GetExecutingAssembly();
+                var assembly = typeof(HealthCheckService).Assembly;
 
                 return Task.FromResult(new SystemMetrics
                 {
@@ -313,23 +318,40 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
         private static string DetermineOverallStatus(IEnumerable<ComponentHealth> components)
         {
+            const string UnhealthyStatus = "Unhealthy";
+            const string WarningStatus = "Warning";
+            const string HealthyStatus = "Healthy";
+            const string UnknownStatus = "Unknown";
+
             var componentsList = components.ToList();
 
-            if (componentsList.Any(c => c.IsUnhealthy))
-                return "Unhealthy";
+            if (componentsList.Exists(c => c.IsUnhealthy))
+            {
+                return UnhealthyStatus;
+            }
 
-            if (componentsList.Any(c => c.IsWarning))
-                return "Warning";
+            if (componentsList.Exists(c => c.IsWarning))
+            {
+                return WarningStatus;
+            }
 
-            return componentsList.All(c => c.IsHealthy) ? "Healthy" : "Unknown";
+            return componentsList.TrueForAll(c => c.IsHealthy) ? HealthyStatus : UnknownStatus;
         }
 
         private async Task CheckForAlertsAsync(HealthStatus healthStatus)
         {
+            // Memory conversion constants
+            const int BytesToKB = 1024;
+            const int KBToMB = 1024;
+            const string CriticalSeverity = "Critical";
+            const string WarningSeverity = "Warning";
+
             try
             {
                 if (!_configService.GetConfiguration().EnableAlerts)
+                {
                     return;
+                }
 
                 var thresholds = _configService.GetThresholds();
 
@@ -339,16 +361,16 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                     await _configService.SendAlertAsync(
                         component.Key,
                         $"Component is unhealthy: {component.Value.ErrorMessage}",
-                        "Critical");
+                        CriticalSeverity);
                 }
 
                 // Check for performance thresholds
-                if (healthStatus.Metrics.MemoryUsedBytes / 1024 / 1024 > thresholds.MemoryUsageMB)
+                if (healthStatus.Metrics.MemoryUsedBytes / BytesToKB / KBToMB > thresholds.MemoryUsageMB)
                 {
                     await _configService.SendAlertAsync(
                         "system",
-                        $"High memory usage: {healthStatus.Metrics.MemoryUsedBytes / 1024 / 1024}MB",
-                        "Warning");
+                        $"High memory usage: {healthStatus.Metrics.MemoryUsedBytes / BytesToKB / KBToMB}MB",
+                        WarningSeverity);
                 }
 
                 if (healthStatus.Metrics.ActiveThreads > thresholds.ActiveThreadsCritical)
@@ -356,14 +378,18 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                     await _configService.SendAlertAsync(
                         "system",
                         $"Critical thread count: {healthStatus.Metrics.ActiveThreads}",
-                        "Critical");
+                        CriticalSeverity);
                 }
                 else if (healthStatus.Metrics.ActiveThreads > thresholds.ActiveThreadsWarning)
                 {
                     await _configService.SendAlertAsync(
                         "system",
                         $"High thread count: {healthStatus.Metrics.ActiveThreads}",
-                        "Warning");
+                        WarningSeverity);
+                }
+                else
+                {
+                    // Thread count is within normal range - no action needed
                 }
             }
             catch (Exception ex)

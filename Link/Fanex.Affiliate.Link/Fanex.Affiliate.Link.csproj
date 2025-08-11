@@ -7,6 +7,8 @@
     <AssemblyName>Fanex.Affiliate.Link</AssemblyName>
     <RootNamespace>Fanex.Affiliate.Link</RootNamespace>
     <UseRazorBuildServer>false</UseRazorBuildServer>
+    <CodeAnalysisRuleSet>Fanex.Affiliate.Link.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,5 +1,4 @@
 ﻿using EasyNetQ;
-using EasyNetQ.Topology;
 
 namespace Fanex.Affiliate.Link.Core.Services.Interfaces;
 

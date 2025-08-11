@@ -11,9 +11,9 @@ public sealed class ClickTrackingRedisStorageWorker(
     IRedisService redisService,
     ILogService logService) : BackgroundService
 {
-    private IDisposable? consumerHandle;
     private const int JobDelayMinute = 1;
-    private bool isRunning = false;
+    private const int InitialDelayMilliseconds = 10;
+    private bool isRunning;
 
     private bool IsCurrentlyUnderMaintenance()
     {
@@ -23,7 +23,10 @@ public sealed class ClickTrackingRedisStorageWorker(
 
     private async Task StartConsumer()
      {
-        if (isRunning || IsCurrentlyUnderMaintenance()) return;
+        if (isRunning || IsCurrentlyUnderMaintenance())
+        {
+            return;
+        }
 
         isRunning = true;
         try
@@ -50,7 +53,7 @@ public sealed class ClickTrackingRedisStorageWorker(
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(10, stoppingToken).ConfigureAwait(false);
+        await Task.Delay(InitialDelayMilliseconds, stoppingToken).ConfigureAwait(false);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -64,7 +67,6 @@ public sealed class ClickTrackingRedisStorageWorker(
 
     public override Task StopAsync(CancellationToken cancellationToken)
     {
-        consumerHandle?.Dispose();
         return base.StopAsync(cancellationToken);
     }
 }

@@ -18,9 +18,9 @@ public sealed class ClickTrackingDLQWorker(
     private bool isUnderMaintenance;
     private readonly object maintenanceLock = new();
     private const int timeToRun = 5;
-    private bool isRunning = false;
+    private const int InitialDelayMilliseconds = 10;
+    private bool isRunning;
 
-    private Exchange errorExchange;
     private Queue errorQueue;
     private readonly string errorExchangeName = $"{Constants.QueueIdentify}.error.exchange";
     private readonly string errorQueueName = $"{Constants.QueueIdentify}.error.queue";
@@ -31,7 +31,9 @@ public sealed class ClickTrackingDLQWorker(
         lock (maintenanceLock)
         {
             if (isUnderMaintenance)
+            {
                 return;
+            }
 
             isUnderMaintenance = true;
             consumerHandle?.Dispose();
@@ -45,7 +47,9 @@ public sealed class ClickTrackingDLQWorker(
         lock (maintenanceLock)
         {
             if (!isUnderMaintenance)
+            {
                 return;
+            }
 
             isUnderMaintenance = false;
             StartConsumer();
@@ -73,7 +77,10 @@ public sealed class ClickTrackingDLQWorker(
 
     private void StartConsumer()
     {
-        if (isRunning) return;
+        if (isRunning)
+        {
+            return;
+        }
 
         isRunning = true;
         consumerHandle = bus.Advanced.Consume<ClickTrackingEvent>(errorQueue, async (message, _) =>
@@ -119,10 +126,10 @@ public sealed class ClickTrackingDLQWorker(
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(10, stoppingToken).ConfigureAwait(false);
+        await Task.Delay(InitialDelayMilliseconds, stoppingToken).ConfigureAwait(false);
 
         // Setup exchanges and queues
-        errorExchange = await bus.Advanced.ExchangeDeclareAsync(errorExchangeName, ExchangeType.Direct);
+        var errorExchange = await bus.Advanced.ExchangeDeclareAsync(errorExchangeName, ExchangeType.Direct);
         errorQueue = await bus.Advanced.QueueDeclareAsync(errorQueueName, c => c
             .AsDurable(true)
             .AsExclusive(false)

@@ -11,8 +11,6 @@ namespace Fanex.Affiliate.Link.Services.Impl
 
         private static readonly ICache MemoryCacheInstance = new MemoryCache(new MemoryCacheOptions());
 
-        public MemoryCacheService() { }
-
         public T Get<T>(string key)
         {
             MemoryCacheInstance.TryGet<T>(key, out T value);

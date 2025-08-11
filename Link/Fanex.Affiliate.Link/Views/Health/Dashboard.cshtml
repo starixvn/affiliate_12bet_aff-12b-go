@@ -1,4 +1,5 @@
 @using Fanex.Affiliate.Link.Helpers
+@using System.Globalization
 @model Fanex.Affiliate.Link.Models.HealthCheck.HealthStatus
 @{
     ViewData["Title"] = "System Health Dashboard";
@@ -145,16 +146,16 @@
             <div class="col-12">
                 <h5 class="mb-3">Component Health Status</h5>
             </div>
-            @foreach (var component in Model.Components)
+            @foreach (var component in Model.Components.Select(c => c.Value))
             {
-                var componentStatusColor = component.Value.Status.ToLower() switch
+                var componentStatusColor = component.Status.ToLower(CultureInfo.InvariantCulture) switch
                 {
                     "healthy" => "success",
                     "warning" => "warning",
                     "unhealthy" => "danger",
                     _ => "secondary"
                 };
-                var iconClass = component.Value.Status.ToLower() switch
+                var iconClass = component.Status.ToLower(CultureInfo.InvariantCulture) switch
                 {
                     "healthy" => "fas fa-check-circle",
                     "warning" => "fas fa-exclamation-triangle", 
@@ -163,38 +164,38 @@
                 };
                 
                 <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card component-card @component.Value.Status.ToLower() h-100">
+                    <div class="card component-card @component.Status.ToLower(CultureInfo.InvariantCulture) h-100">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h6 class="card-title mb-0">
                                     <i class="@iconClass status-icon text-@componentStatusColor"></i>
-                                    @component.Value.Name
+                                    @component.Name
                                 </h6>
-                                <span class="badge bg-@componentStatusColor">@component.Value.Status</span>
+                                <span class="badge bg-@componentStatusColor">@component.Status</span>
                             </div>
-                            <p class="card-text text-muted small mb-2">@component.Value.Description</p>
-                            @if (!string.IsNullOrEmpty(component.Value.ErrorMessage))
+                            <p class="card-text text-muted small mb-2">@component.Description</p>
+                            @if (!string.IsNullOrEmpty(component.ErrorMessage))
                             {
                                 <div class="alert alert-danger py-1 px-2 small mb-2">
-                                    @component.Value.ErrorMessage
+                                    @component.ErrorMessage
                                 </div>
                             }
                             <div class="row small text-muted">
                                 <div class="col-6">
                                     <i class="fas fa-stopwatch"></i>
-                                    @component.Value.ResponseTime.TotalMilliseconds.ToString("F1")ms
+                                    @component.ResponseTime.TotalMilliseconds.ToString("F1")ms
                                 </div>
                                 <div class="col-6 text-end">
                                     <i class="fas fa-clock"></i>
-                                    @component.Value.LastChecked.ToString("HH:mm:ss")
+                                    @component.LastChecked.ToString("HH:mm:ss")
                                 </div>
                             </div>
-                            @if (component.Value.Data.Any())
+                            @if (component.Data.Any())
                             {
                                 <details class="mt-2">
                                     <summary class="small text-muted" style="cursor: pointer;">Additional Data</summary>
                                     <div class="mt-1 small">
-                                        @foreach (var data in component.Value.Data)
+                                        @foreach (var data in component.Data)
                                         {
                                             <div><strong>@data.Key:</strong> @data.Value</div>
                                         }

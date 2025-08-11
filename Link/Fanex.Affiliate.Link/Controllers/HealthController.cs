@@ -14,18 +14,20 @@ namespace Fanex.Affiliate.Link.Controllers
     public class HealthController : Controller
     {
         private readonly IHealthCheckService _healthCheckService;
-        private readonly IHealthCheckConfigurationService _configService;
         private readonly IHealthCheckServerInfoService _serverInfoService;
         private readonly ILogger<HealthController> _logger;
 
+        // HTTP Status Codes
+        private const int HttpStatusOk = 200;
+        private const int HttpStatusInternalServerError = 500;
+        private const int HttpStatusServiceUnavailable = 503;
+
         public HealthController(
             IHealthCheckService healthCheckService,
-            IHealthCheckConfigurationService configService,
             IHealthCheckServerInfoService serverInfoService,
             ILogger<HealthController> logger)
         {
             _healthCheckService = healthCheckService ?? throw new ArgumentNullException(nameof(healthCheckService));
-            _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _serverInfoService = serverInfoService ?? throw new ArgumentNullException(nameof(serverInfoService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -88,10 +90,10 @@ namespace Fanex.Affiliate.Link.Controllers
 
                 var statusCode = healthStatus.Status switch
                 {
-                    "Healthy" => 200,
-                    "Warning" => 200, // Still operational but with warnings
-                    "Unhealthy" => 503, // Service unavailable
-                    _ => 500
+                    "Healthy" => HttpStatusOk,
+                    "Warning" => HttpStatusOk, // Still operational but with warnings
+                    "Unhealthy" => HttpStatusServiceUnavailable, // Service unavailable
+                    _ => HttpStatusInternalServerError
                 };
 
                 return StatusCode(statusCode, healthStatus);
@@ -99,7 +101,7 @@ namespace Fanex.Affiliate.Link.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Health check failed");
-                return StatusCode(500, new HealthStatus
+                return StatusCode(HttpStatusInternalServerError, new HealthStatus
                 {
                     Status = "Unhealthy",
                     Components = { ["system"] = ComponentHealth.Unhealthy("System", ex.Message) }
@@ -126,13 +128,14 @@ namespace Fanex.Affiliate.Link.Controllers
                     _ => ComponentHealth.Unhealthy("Unknown", $"Component '{componentName}' not found")
                 };
 
-                var statusCode = component.IsHealthy ? 200 : component.IsWarning ? 200 : 503;
+                var isWarningStatus = component.IsWarning ? HttpStatusOk : HttpStatusServiceUnavailable;
+                var statusCode = component.IsHealthy ? HttpStatusOk : isWarningStatus;
                 return StatusCode(statusCode, component);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Component health check failed for {Component}", componentName);
-                return StatusCode(500, ComponentHealth.Unhealthy(componentName, ex.Message));
+                return StatusCode(HttpStatusInternalServerError, ComponentHealth.Unhealthy(componentName, ex.Message));
             }
         }
 
@@ -151,7 +154,7 @@ namespace Fanex.Affiliate.Link.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get system metrics");
-                return StatusCode(500, new { Error = ex.Message });
+                return StatusCode(HttpStatusInternalServerError, new { Error = ex.Message });
             }
         }
 

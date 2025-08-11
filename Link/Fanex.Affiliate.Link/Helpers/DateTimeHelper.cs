@@ -1,6 +1,6 @@
 ﻿namespace Fanex.Affiliate.Link.Helpers
 {
-    public class DateTimeHelper
+    public static class DateTimeHelper
     {
         private const int GmtMinus4 = -4;
 

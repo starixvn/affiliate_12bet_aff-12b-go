@@ -11,7 +11,6 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
     {
         private readonly HealthCheckConfig _config;
         private readonly ILogger<HealthCheckConfigurationService> _logger;
-        private readonly IConfiguration _configuration;
 
         public HealthCheckConfigurationService(
             IOptions<HealthCheckConfig> config,
@@ -20,7 +19,6 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
         {
             _config = config.Value ?? new HealthCheckConfig();
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         public HealthCheckConfig GetConfiguration() => _config;
@@ -34,14 +32,20 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
         public bool ValidateApiKey(string apiKey)
         {
-            if (!_config.RequireAuthentication) return true;
-            if (string.IsNullOrEmpty(_config.ApiKey)) return false;
+            if (!_config.RequireAuthentication)
+            {
+                return true;
+            }
+            if (string.IsNullOrEmpty(_config.ApiKey))
+            {
+                return false;
+            }
             return string.Equals(_config.ApiKey, apiKey, StringComparison.Ordinal);
         }
 
         public HealthThresholds GetThresholds() => _config.Thresholds ?? new HealthThresholds();
 
-        public Task<bool> SendAlertAsync(string componentName, string message, string severity = "Warning")
+        public Task<bool> SendAlertAsync(string componentName, string message, string severity)
         {
             if (!_config.EnableAlerts)
             {

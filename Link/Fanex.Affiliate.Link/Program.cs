@@ -1,4 +1,3 @@
-using EasyNetQ;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Services;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
@@ -45,7 +44,6 @@ builder.Services.AddScoped<IHealthCheckServerInfoService, HealthCheckServerInfoS
 builder.Services.Configure<HealthCheckConfig>(
     builder.Configuration.GetSection("HealthCheck"));
 
-
 // Configure configuration
 builder.Configuration
     .SetBasePath(builder.Environment.ContentRootPath)
@@ -56,16 +54,13 @@ RedisConnectionHelper.Initialize(builder.Configuration);
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => RedisConnectionHelper.Connection);
 builder.Services.AddSingleton<IRedisService, RedisService>();
 
-//var rabbitMqConnectionString = builder.Configuration.GetValue<string>("RabbitMQConnectionString");
 builder.Services.AddHttpClient();
-//builder.Services.AddSingleton(RabbitHutch.CreateBus(rabbitMqConnectionString));
 builder.Services.AddSingleton<Fanex.Logging.ILogger, Fanex.Logging.Logger>();
 builder.Services.AddSingleton<ILogService, LogService>();
 
 builder.Services.AddHostedService<RabbitMqBusHostedService>();
 builder.Services.AddSingleton<IRabbitBus, Fanex.Affiliate.Link.Core.Services.RabbitBus>();
 builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
-//builder.Services.AddSingleton<IBus, RabbitHutch>();
 
 builder.Services.AddOneBookUmForService(builder.Configuration);
 const short workerThreads = 300;
@@ -103,7 +98,6 @@ DbSettingProviderManager
     .StartNewSession()
     .Register(builder.Configuration)
     .Run();
-
 
 // Register Sentry logging
 Fanex.Affiliate.Link.LoggingConfig.RegisterSentry();

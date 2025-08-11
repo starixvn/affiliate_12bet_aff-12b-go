@@ -1,6 +1,5 @@
 namespace Fanex.Affiliate.Link.Services.HealthCheck
 {
-    using Azure.Core;
     using Extensions;
     using Fanex.Affiliate.Link.Constants;
     using Fanex.Affiliate.Link.Helpers;
@@ -51,18 +50,22 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
         public IDictionary<string, object> GetBasicServerInfo()
         {
+            const string ServerTimeKey = "Server Time";
+            const string EnvKey = "Env";
+            const string LastUpdatedKey = "Last Updated";
+
             try
             {
                 var result = new Dictionary<string, object>
                 {
-                    { "Env", _env.EnvironmentName },
-                    { "Server Time", DateTimeHelper.ServerTime }
+                    { EnvKey, _env.EnvironmentName },
+                    { ServerTimeKey, DateTimeHelper.ServerTime }
                 };
 
                 // Try to add assembly info
                 try
                 {
-                    result.Add("Last Updated", File.GetCreationTime(typeof(HealthCheckServerInfoService).Assembly.Location).ToString(CultureInfo.InvariantCulture));
+                    result.Add(LastUpdatedKey, File.GetCreationTime(typeof(HealthCheckServerInfoService).Assembly.Location).ToString(CultureInfo.InvariantCulture));
                 }
                 catch (Exception ex)
                 {
@@ -76,8 +79,8 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                 _logger.LogError(ex, "Failed to retrieve basic server information");
                 return new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
                 {
-                    { "Env", "Unknown" },
-                    { "Server Time", DateTimeHelper.ServerTime }
+                    { EnvKey, "Unknown" },
+                    { ServerTimeKey, DateTimeHelper.ServerTime }
                 });
             }
         }
@@ -113,13 +116,16 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
         /// </summary>
         private void AddExtraServerInfo(IDictionary<string, object> result)
         {
+            const string ServerTimeKey = "Server Time";
+            const string LastUpdatedKey = "Last Updated";
+
             try
             {
                 var context = _httpContextAccessor.HttpContext;
                 if (context != null)
                 {
-                    result.Add("Server Time", DateTimeHelper.ServerTime);
-                    result.Add("Last Updated", File.GetCreationTime(typeof(HealthCheckServerInfoService).Assembly.Location).ToString(CultureInfo.InvariantCulture));
+                    result.Add(ServerTimeKey, DateTimeHelper.ServerTime);
+                    result.Add(LastUpdatedKey, File.GetCreationTime(typeof(HealthCheckServerInfoService).Assembly.Location).ToString(CultureInfo.InvariantCulture));
                     result.Add("Local Ip", context.Connection.LocalIpAddress?.ToString() ?? "Unknown");
                     result.Add("Local Port", context.Connection.LocalPort);
                     result.Add("Client Ip", context.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
@@ -138,7 +144,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             catch (Exception ex)
             {
                 _logger.LogDebug(ex, "Failed to retrieve extra server information");
-                result.Add("Server Time", DateTimeHelper.ServerTime);
+                result.Add(ServerTimeKey, DateTimeHelper.ServerTime);
             }
         }
     }

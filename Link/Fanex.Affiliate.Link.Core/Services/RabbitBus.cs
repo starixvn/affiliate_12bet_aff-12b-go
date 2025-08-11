@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Fanex.Affiliate.Link.Core.Services;
 
-public class RabbitBus(IRedisService redisService, ILogService logService) : IRabbitBus
+public class RabbitBus(ILogService logService) : IRabbitBus
 {
     private IAdvancedBus? advancedBus;
     private Exchange? exchange;
@@ -27,16 +27,19 @@ public class RabbitBus(IRedisService redisService, ILogService logService) : IRa
                     await ExchangeDeclareAsync();
                 }
 
-                await advancedBus.PublishAsync(
-                       exchange.Value,
-                       routingKey: $"{Constants.QueueIdentify}.routing",
-                       mandatory: false,
-                   new Message<T>(model)
-                   );
+                if (exchange.HasValue)
+                {
+                    await advancedBus.PublishAsync(
+                           exchange.Value,
+                           routingKey: $"{Constants.QueueIdentify}.routing",
+                           mandatory: false,
+                       new Message<T>(model)
+                       );
 
-                result = true;
+                    result = true;
 
-                logService.LogFileMessage($"Published model {JsonConvert.SerializeObject(model)} successfully!");
+                    logService.LogFileMessage($"Published model {JsonConvert.SerializeObject(model)} successfully!");
+                }
             }
             catch (Exception ex)
             {
@@ -55,11 +58,12 @@ public class RabbitBus(IRedisService redisService, ILogService logService) : IRa
     {
         try
         {
-            var exchangeName = $"{Constants.QueueIdentify}.exchange";
+            const string exchangeName = $"{Constants.QueueIdentify}.exchange";
             exchange = await advancedBus.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct);
         }
         catch (Exception ex)
         {
+            logService.LogFileMessage($"Error declaring exchange: {ex.Message}");
             exchange = null;
         }
     }

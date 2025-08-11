@@ -27,6 +27,6 @@ namespace Fanex.Affiliate.Link.Constants
         /// Cannot use GeneratedRegex since the pattern is built at runtime.
         /// </summary>
         public static readonly Regex Language = new($"^{RouteConstraints.LanguageRegexPattern}$",
-            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
     }
 }

@@ -1,25 +1,22 @@
-﻿using StackExchange.Redis;
-
-namespace Fanex.Affiliate.Link.Core.Services.Interfaces;
+﻿namespace Fanex.Affiliate.Link.Core.Services.Interfaces;
 
 public interface IRedisService
 {
     Task<bool> RemoveAsync(string key);
 
-    Task<bool> SetAsync<T>(string key, T value, TimeSpan? expireTime = null);
+    Task<bool> SetAsync<T>(string key, T? value, TimeSpan? expireTime = null);
 
-    Task<T> GetAsync<T>(string key);
+    Task<T?> GetAsync<T>(string key);
 
-
-    Task<T> GetWithSlidingExpirationAsync<T>(string key, TimeSpan slidingExpirationTime);
+    Task<T?> GetWithSlidingExpirationAsync<T>(string key, TimeSpan slidingExpirationTime);
 
     Task<long> StringIncrementAsync(string key);
 
     Task<bool> StringSetAsync(string key, string value);
 
-    Task<string> StringGetAsync(string key);
+    Task<string?> StringGetAsync(string key);
 
-    Task<long> ListRightPushAsync<T>(string key, T value);
+    Task<long> ListRightPushAsync<T>(string key, T? value);
 
-    Task<T> ListLeftPopAsync<T>(string key);
+    Task<T?> ListLeftPopAsync<T>(string key);
 }

@@ -36,7 +36,9 @@ namespace Fanex.Affiliate.Link.Models.HealthCheck
         public int HealthyChecks { get; set; }
         public int WarningChecks { get; set; }
         public int UnhealthyChecks { get; set; }
-        public double UptimePercent => TotalChecks > 0 ? (double)HealthyChecks / TotalChecks * 100 : 0;
+        private const double PercentageMultiplier = 100.0;
+        
+        public double UptimePercent => TotalChecks > 0 ? (double)HealthyChecks / TotalChecks * PercentageMultiplier : 0;
         public Dictionary<string, ComponentSummary> ComponentSummaries { get; set; } = new();
     }
 
@@ -48,7 +50,8 @@ namespace Fanex.Affiliate.Link.Models.HealthCheck
         public int WarningChecks { get; set; }
         public int UnhealthyChecks { get; set; }
         public double AverageResponseTimeMs { get; set; }
-        public double UptimePercent => TotalChecks > 0 ? (double)HealthyChecks / TotalChecks * 100 : 0;
+        private const double PercentageMultiplier = 100.0;
+        public double UptimePercent => TotalChecks > 0 ? (double)HealthyChecks / TotalChecks * PercentageMultiplier : 0;
         public List<string> RecentErrors { get; set; } = new();
     }
 }

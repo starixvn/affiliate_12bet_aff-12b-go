@@ -8,10 +8,12 @@ namespace Fanex.Affiliate.Link.Models.HealthCheck
         public double CpuUsagePercent { get; set; }
         public long MemoryUsedBytes { get; set; }
         public long MemoryTotalBytes { get; set; }
-        public double MemoryUsagePercent => MemoryTotalBytes > 0 ? (double)MemoryUsedBytes / MemoryTotalBytes * 100 : 0;
+        private const double PercentageMultiplier = 100.0;
+        
+        public double MemoryUsagePercent => MemoryTotalBytes > 0 ? (double)MemoryUsedBytes / MemoryTotalBytes * PercentageMultiplier : 0;
         public long DiskUsedBytes { get; set; }
         public long DiskTotalBytes { get; set; }
-        public double DiskUsagePercent => DiskTotalBytes > 0 ? (double)DiskUsedBytes / DiskTotalBytes * 100 : 0;
+        public double DiskUsagePercent => DiskTotalBytes > 0 ? (double)DiskUsedBytes / DiskTotalBytes * PercentageMultiplier : 0;
         public int ActiveThreads { get; set; }
         public int ActiveConnections { get; set; }
         public TimeSpan Uptime { get; set; }

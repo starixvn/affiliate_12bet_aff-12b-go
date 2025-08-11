@@ -9,10 +9,11 @@ namespace Fanex.Affiliate.Link.Filters
     /// Performs both pattern validation and business logic validation with database access.
     /// This is part of the Hybrid Approach - basic constraints filter routes, this filter validates business logic.
     /// </summary>
-    public class AffiliateValidationFilter(IAffInfoService affInfoService, ILogger<AffiliateValidationFilter> logger) : ActionFilterAttribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    public class AffiliateValidationAttribute(IAffInfoService affInfoService, ILogger<AffiliateValidationAttribute> logger) : ActionFilterAttribute
     {
         private readonly IAffInfoService _affInfoService = affInfoService ?? throw new ArgumentNullException(nameof(affInfoService));
-        private readonly ILogger<AffiliateValidationFilter> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly ILogger<AffiliateValidationAttribute> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Constants for error messages
         private const string AffiliateNotFoundMessage = "not found or is inactive. Please contact support if you believe this is an error.";
@@ -88,14 +89,20 @@ namespace Fanex.Affiliate.Link.Filters
         private AffiliateValidationResult ValidateAffiliateById(IDictionary<string, object> parameters)
         {
             if (!parameters.TryGetValue("affId", out var affIdValue) || affIdValue == null)
+            {
                 return null;
+            }
 
             if (!int.TryParse(affIdValue.ToString(), out var affId))
+            {
                 return null;
+            }
 
             var affInfo = _affInfoService.GetAffInfoByAffId(affId);
             if (string.IsNullOrEmpty(affInfo.AffCode))
+            {
                 return AffiliateValidationResult.Failure($"Affiliate ID '{affId}' {AffiliateNotFoundMessage}");
+            }
 
             return AffiliateValidationResult.Success(affInfo);
         }
@@ -103,15 +110,21 @@ namespace Fanex.Affiliate.Link.Filters
         private AffiliateValidationResult ValidateAffiliateByCode(IDictionary<string, object> parameters)
         {
             if (!parameters.TryGetValue("affCode", out var affCodeValue) || affCodeValue == null)
+            {
                 return null;
+            }
 
             var affCode = affCodeValue.ToString();
             if (string.IsNullOrEmpty(affCode))
+            {
                 return null;
+            }
 
             var affInfo = _affInfoService.GetAffInfoByAffCode(affCode);
             if (affInfo.AffId == 0)
+            {
                 return AffiliateValidationResult.Failure($"Affiliate code '{affCode}' {AffiliateNotFoundMessage}");
+            }
 
             return AffiliateValidationResult.Success(affInfo);
         }
@@ -123,7 +136,7 @@ namespace Fanex.Affiliate.Link.Filters
     public class AffiliateValidationResult
     {
         public bool IsValid { get; private set; }
-        public string ErrorMessage { get; private set; } = string.Empty;
+        public string ErrorMessage { get; private set; }
         public object AffiliateInfo { get; private set; }
 
         private AffiliateValidationResult(bool isValid, string errorMessage = "", object affiliateInfo = null)

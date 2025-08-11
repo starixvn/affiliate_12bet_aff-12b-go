@@ -13,7 +13,7 @@ namespace Fanex.Affiliate.Link.Helpers
 
         public static Match Match(string input, string pattern)
         {
-            return Regex.Match(input, pattern);
+            return Regex.Match(input, pattern, RegexOptions.None, TimeSpan.FromSeconds(TimeOutSecond));
         }
     }
 }

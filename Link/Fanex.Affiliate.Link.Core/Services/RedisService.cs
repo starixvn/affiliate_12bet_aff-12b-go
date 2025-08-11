@@ -9,6 +9,7 @@ public class RedisService: IRedisService
 {
     private readonly IDatabase datatabse;
     private readonly AsyncRetryPolicy retryPolicy;
+    private const int RetryCount = 3;
 
     public RedisService(IConnectionMultiplexer redis)
     {
@@ -18,10 +19,10 @@ public class RedisService: IRedisService
             .Or<RedisTimeoutException>()
             .Or<RedisServerException>(ex => 
                 ex.Message.Contains("READONLY"))
-            .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1),
-                (exception, timeSpan, retryCount, context) =>
+            .WaitAndRetryAsync(RetryCount, retryAttempt => TimeSpan.FromSeconds(1),
+                (_, _, _, _) =>
                 {
-                    Console.WriteLine($"[Redis] Retry {retryCount} after {timeSpan.TotalSeconds}s due to: {exception.Message}");
+                    // Retry logic handled by Polly
                 });
     }
 
@@ -32,19 +33,19 @@ public class RedisService: IRedisService
           );
     }
 
-    public async Task<bool> SetAsync<T>(string key, T value, TimeSpan? expireTime = null)
+    public async Task<bool> SetAsync<T>(string key, T? value, TimeSpan? expireTime = null)
     {
         var redisValue = RedisTypeConverter.ToRedisValue(value);
         return await retryPolicy.ExecuteAsync(async () =>
             await datatabse.StringSetAsync(key, redisValue));
     }
 
-    public async Task<T> GetAsync<T>(string key)
+    public async Task<T?> GetAsync<T>(string key)
     {
         return await retryPolicy.ExecuteAsync(async () =>
         {
             var redisValue = await datatabse.StringGetAsync(key);
-            var value = default(T);
+            T? value = default;
 
             if (!redisValue.IsNull)
             {
@@ -60,12 +61,12 @@ public class RedisService: IRedisService
         await datatabse.StringSetAsync(key, value, ttl);
     }
 
-    public async Task<T> GetWithSlidingExpirationAsync<T>(string key, TimeSpan slidingExpirationTime)
+    public async Task<T?> GetWithSlidingExpirationAsync<T>(string key, TimeSpan slidingExpirationTime)
     {
         return await retryPolicy.ExecuteAsync(async () =>
         {
             var redisValue = await datatabse.StringGetAsync(key);
-            var value = default(T);
+            T? value = default;
             if (!redisValue.IsNull)
             {
                 value = RedisTypeConverter.ToObject<T>(redisValue);
@@ -92,7 +93,7 @@ public class RedisService: IRedisService
         });
     }
 
-    public async Task<string> StringGetAsync(string key)
+    public async Task<string?> StringGetAsync(string key)
     {
         return await retryPolicy.ExecuteAsync(async () =>
         {
@@ -100,7 +101,7 @@ public class RedisService: IRedisService
         });
     }
 
-    public async Task<long> ListRightPushAsync<T>(string key, T value)
+    public async Task<long> ListRightPushAsync<T>(string key, T? value)
     {
         var redisValue = RedisTypeConverter.ToRedisValue(value);
         return await retryPolicy.ExecuteAsync(async () =>
@@ -109,13 +110,13 @@ public class RedisService: IRedisService
         });
     }
 
-    public async Task<T> ListLeftPopAsync<T>(string key)
+    public async Task<T?> ListLeftPopAsync<T>(string key)
     {
         return await retryPolicy.ExecuteAsync(async () =>
         {
             var redisValue = await datatabse.ListLeftPopAsync(key);
 
-            var value = default(T);
+            T? value = default;
             if (!redisValue.IsNull)
             {
                 value = RedisTypeConverter.ToObject<T>(redisValue);

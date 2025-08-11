@@ -3,15 +3,19 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Security.Cryptography;
-    using System.Text;
 
     /// <summary>
     /// Common class.
     /// </summary>
     public static class Common
     {
-        private const int ValidLength = 4;
+        // Browser name constants
+        private const string ChromeBrowser = "Chrome";
+        private const string SafariBrowser = "Safari";
+        private const string EdgeBrowser = "Edge";
+        private const string OperaBrowser = "Opera";
+        private const string FirefoxBrowser = "Firefox";
+        private const string InternetExplorerBrowser = "Internet Explorer";
 
         /// <summary>
         /// Contains all operating system mapping.
@@ -50,19 +54,6 @@
             return string.IsNullOrEmpty(osKey) ? string.Empty : _operatingSystemMapping[osKey];
         }
 
-        /// <summary>
-        /// Encrypt a string using SHA256.
-        /// </summary>
-        /// <param name="inputString">Input string.</param>
-        /// <returns>Encrypted string.</returns>
-        public static string EncryptUsingSHA256(string inputString)
-        {
-            var hashAlgorithm = new SHA256Managed();
-            var hashData = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(inputString));
-
-            return BitConverter.ToString(hashData).Replace("-", string.Empty).ToLower();
-        }
-
         public static string GetDomainReferrer(string urlReferrer)
         {
             if (Uri.IsWellFormedUriString(urlReferrer, UriKind.Absolute))
@@ -88,18 +79,34 @@
 
             userAgent = userAgent.ToLowerInvariant();
 
-            if (userAgent.Contains("edg/") || userAgent.Contains("edge/"))
-                return "Edge";
-            if (userAgent.Contains("opr/") || userAgent.Contains("opera"))
-                return "Opera";
-            if (userAgent.Contains("chrome") && !userAgent.Contains("edg/") && !userAgent.Contains("opr/"))
-                return "Chrome";
-            if (userAgent.Contains("safari") && !userAgent.Contains("chrome"))
-                return "Safari";
-            if (userAgent.Contains("firefox"))
-                return "Firefox";
-            if (userAgent.Contains("msie") || userAgent.Contains("trident"))
-                return "Internet Explorer";
+            // Define browser patterns in order of specificity
+            var browserPatterns = new[]
+            {
+                (EdgeBrowser, new[] { "edg/", "edge/" }),
+                (OperaBrowser, new[] { "opr/", "opera" }),
+                (ChromeBrowser, new[] { "chrome" }),
+                (SafariBrowser, new[] { "safari" }),
+                (FirefoxBrowser, new[] { "firefox" }),
+                (InternetExplorerBrowser, new[] { "msie", "trident" })
+            };
+
+            foreach (var (browserName, patterns) in browserPatterns)
+            {
+                if (patterns.ToList().Exists(pattern => userAgent.Contains(pattern)))
+                {
+                    // Special handling for Chrome to avoid false positives
+                    if (browserName == ChromeBrowser && (userAgent.Contains("edg/") || userAgent.Contains("opr/")))
+                    {
+                        continue;
+                    }
+                    // Special handling for Safari to avoid Chrome false positives
+                    if (browserName == SafariBrowser && userAgent.Contains("chrome"))
+                    {
+                        continue;
+                    }
+                    return browserName;
+                }
+            }
 
             return "Other";
         }
@@ -118,67 +125,60 @@
 
             userAgent = userAgent.ToLowerInvariant();
 
-            // Edge (Chromium-based and Legacy)
-            var edgeMatch = RegexHelper.Match(userAgent, @"edg/([\d\.]+)");
-            if (edgeMatch.Success)
+            // Define browser version patterns in order of specificity
+            var browserVersionPatterns = new[]
             {
-                return edgeMatch.Groups[1].Value;
-            }
-            edgeMatch = RegexHelper.Match(userAgent, @"edge/([\d\.]+)");
-            if (edgeMatch.Success)
-            {
-                return edgeMatch.Groups[1].Value;
-            }
+                (EdgeBrowser, new[] { @"edg/([\d\.]+)", @"edge/([\d\.]+)" }),
+                (OperaBrowser, new[] { @"opr/([\d\.]+)", @"opera/([\d\.]+)" }),
+                (ChromeBrowser, new[] { @"chrome/([\d\.]+)" }),
+                (SafariBrowser, new[] { @"version/([\d\.]+)" }),
+                (FirefoxBrowser, new[] { @"firefox/([\d\.]+)" }),
+                (InternetExplorerBrowser, new[] { @"msie ([\d\.]+)", @"rv:([\d\.]+)" })
+            };
 
-            // Opera
-            var operaMatch = RegexHelper.Match(userAgent, @"opr/([\d\.]+)");
-            if (operaMatch.Success)
+            foreach (var (browserName, patterns) in browserVersionPatterns)
             {
-                return operaMatch.Groups[1].Value;
-            }
-            operaMatch = RegexHelper.Match(userAgent, @"opera/([\d\.]+)");
-            if (operaMatch.Success)
-            {
-                return operaMatch.Groups[1].Value;
-            }
-
-            // Chrome
-            var chromeMatch = RegexHelper.Match(userAgent, @"chrome/([\d\.]+)");
-            if (chromeMatch.Success && !userAgent.Contains("edg/") && !userAgent.Contains("opr/"))
-            {
-                return chromeMatch.Groups[1].Value;
-            }
-
-            // Safari (but not Chrome)
-            if (userAgent.Contains("safari") && !userAgent.Contains("chrome"))
-            {
-                var safariMatch = RegexHelper.Match(userAgent, @"version/([\d\.]+)");
-                if (safariMatch.Success)
+                var version = GetVersionForBrowser(userAgent, browserName, patterns);
+                if (!string.IsNullOrEmpty(version))
                 {
-                    return safariMatch.Groups[1].Value;
+                    return version;
                 }
             }
 
-            // Firefox
-            var firefoxMatch = RegexHelper.Match(userAgent, @"firefox/([\d\.]+)");
-            if (firefoxMatch.Success)
-            {
-                return firefoxMatch.Groups[1].Value;
-            }
-
-            // Internet Explorer
-            var ieMatch = RegexHelper.Match(userAgent, @"msie ([\d\.]+)");
-            if (ieMatch.Success)
-            {
-                return ieMatch.Groups[1].Value;
-            }
-            ieMatch = RegexHelper.Match(userAgent, @"rv:([\d\.]+)");
-            if (ieMatch.Success && userAgent.Contains("trident"))
-            {
-                return ieMatch.Groups[1].Value;
-            }
-
             return string.Empty;
+        }
+
+        private static string GetVersionForBrowser(string userAgent, string browserName, string[] patterns)
+        {
+            foreach (var pattern in patterns)
+            {
+                var match = RegexHelper.Match(userAgent, pattern);
+                if (match.Success && IsValidBrowserMatch(userAgent, browserName, pattern))
+                {
+                    return match.Groups[1].Value;
+                }
+            }
+            return string.Empty;
+        }
+
+        private static bool IsValidBrowserMatch(string userAgent, string browserName, string pattern)
+        {
+            // Special handling for Chrome to avoid false positives
+            if (browserName == ChromeBrowser && (userAgent.Contains("edg/") || userAgent.Contains("opr/")))
+            {
+                return false;
+            }
+            // Special handling for Safari to avoid Chrome false positives
+            if (browserName == SafariBrowser && userAgent.Contains("chrome"))
+            {
+                return false;
+            }
+            // Special handling for IE Trident
+            if (browserName == InternetExplorerBrowser && pattern == @"rv:([\d\.]+)" && !userAgent.Contains("trident"))
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

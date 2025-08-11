@@ -15,6 +15,8 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
         private readonly ILogger<HealthCheckHistoryService> _logger;
         private const string HISTORY_CACHE_KEY = CacheKey.MASTER_DATA + ".HealthHistory";
         private const int MAX_HISTORY_RECORDS = 1000;
+        private const int CacheDurationSeconds = 86400; // 24 hours
+        private const int MaxRecentErrors = 5;
 
         public HealthCheckHistoryService(
             IMemoryCacheService cacheService,
@@ -62,7 +64,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                                    .ToList();
                 }
 
-                _cacheService.Set(HISTORY_CACHE_KEY, history, 86400); // Cache for 24 hours
+                _cacheService.Set(HISTORY_CACHE_KEY, history, CacheDurationSeconds); // Cache for 24 hours
 
                 _logger.LogDebug("Recorded health check history: {Status} at {Timestamp}",
                     healthStatus.Status, healthStatus.Timestamp);
@@ -140,7 +142,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                             .Where(c => !string.IsNullOrEmpty(c.ErrorMessage))
                             .Select(c => c.ErrorMessage)
                             .Distinct()
-                            .Take(5)
+                            .Take(MaxRecentErrors)
                             .ToList()
                     };
                 }
@@ -166,7 +168,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
                 // Group by hour for trending
                 var hourlyGroups = componentHistory
-                    .GroupBy(c => DateTimeHelper.CreateDateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, 0, 0))
+                    .GroupBy(c => DateTimeHelper.CreateDateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour))
                     .ToList();
 
                 return hourlyGroups.Select(group => new ComponentSummary
@@ -197,7 +199,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 
                 if (filteredHistory.Count != history.Count)
                 {
-                    _cacheService.Set(HISTORY_CACHE_KEY, filteredHistory, 86400);
+                    _cacheService.Set(HISTORY_CACHE_KEY, filteredHistory, CacheDurationSeconds);
                     _logger.LogInformation("Cleaned up {Count} old health check records",
                         history.Count - filteredHistory.Count);
                 }

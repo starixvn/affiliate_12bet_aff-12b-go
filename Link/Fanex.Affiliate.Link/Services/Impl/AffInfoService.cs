@@ -10,8 +10,6 @@
             IMemoryCacheService memoryCacheService) : IAffInfoService
     {
 
-        private const int CacheDurationInSeconds = 86400;
-
         public AffiliateInfo GetAffInfoByAffId(int affId)
         {
             var cacheKey = $"{CacheKey.AFF_INFO_BY_AFF_ID_CACHE_KEY}_{affId}";

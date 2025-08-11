@@ -32,7 +32,7 @@
 
         Task<long> GetClickId();
 
-        Task<long> SyncMaxClickId(bool isSync = true);
+        Task<long> SyncMaxClickId(bool isSync);
 
         Task PublishMessage(ClickTrackingEvent clickTrackingEvent);
     }

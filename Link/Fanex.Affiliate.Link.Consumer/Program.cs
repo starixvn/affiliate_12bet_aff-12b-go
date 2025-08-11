@@ -15,8 +15,6 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//builder.Services.AddHostedService<ClickTrackingWorker>();
-//builder.Services.AddHostedService<ClickTrackingDLQWorker>();
 builder.Services.AddHostedService<ClickTrackingRedisStorageWorker>();
 var rabbitMqConnectionString = builder.Configuration.GetValue<string>("RabbitMQConnectionString");
 builder.Services.AddHttpClient();

@@ -5,8 +5,9 @@ namespace Fanex.Affiliate.Link.Core;
 
 public static class RedisConnectionHelper
 {
-    private static Lazy<ConnectionMultiplexer> lazyConnection;
+    private static Lazy<ConnectionMultiplexer>? lazyConnection;
     private static readonly object InitLock = new();
+    private const int ConnectRetryCount = 3;
 
     public static void Initialize(IConfiguration configuration)
     {
@@ -34,7 +35,7 @@ public static class RedisConnectionHelper
                 var options = ConfigurationOptions.Parse(connectionString);
 
                 options.AbortOnConnectFail = false;
-                options.ConnectRetry = 3;
+                options.ConnectRetry = ConnectRetryCount;
                 options.ReconnectRetryPolicy = new ExponentialRetry(5000);
                 options.ClientName = configuration["fanex.caching.redis:ApplicationName"];
                 return ConnectionMultiplexer.Connect(options);

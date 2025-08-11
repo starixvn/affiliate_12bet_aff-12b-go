@@ -12,6 +12,6 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
         bool IsAuthenticationRequired();
         bool ValidateApiKey(string apiKey);
         HealthThresholds GetThresholds();
-        Task<bool> SendAlertAsync(string componentName, string message, string severity = "Warning");
+        Task<bool> SendAlertAsync(string componentName, string message, string severity);
     }
 }

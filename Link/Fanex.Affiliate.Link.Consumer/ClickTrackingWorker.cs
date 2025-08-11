@@ -16,16 +16,15 @@ public sealed class ClickTrackingWorker(
 {
     private IDisposable? consumerHandle;
     private bool isUnderMaintenance;
+    private bool isRunning;
     private readonly object maintenanceLock = new();
     private const int maxRetryCount = 5;
     private const int timeToReQueue = 30000;
+    private const int InitialDelayMilliseconds = 10;
 
-    private Exchange mainExchange;
     private Exchange retryExchange;
     private Exchange errorExchange;
     private Queue mainQueue;
-    private Queue retryQueue;
-    private Queue errorQueue;
 
     private readonly string mainExchangeName = $"{Constants.QueueIdentify}.exchange";
     private readonly string retryExchangeName = $"{Constants.QueueIdentify}.retry.exchange";
@@ -40,7 +39,9 @@ public sealed class ClickTrackingWorker(
         lock (maintenanceLock)
         {
             if (isUnderMaintenance)
+            {
                 return;
+            }
 
             isUnderMaintenance = true;
             consumerHandle?.Dispose();
@@ -54,7 +55,9 @@ public sealed class ClickTrackingWorker(
         lock (maintenanceLock)
         {
             if (!isUnderMaintenance)
+            {
                 return;
+            }
 
             isUnderMaintenance = false;
             StartConsumer();
@@ -82,6 +85,12 @@ public sealed class ClickTrackingWorker(
 
     private void StartConsumer()
     {
+        if (isRunning)
+        {
+            return;
+        }
+
+        isRunning = true;
         consumerHandle = bus.Advanced.Consume<ClickTrackingEvent>(mainQueue, async (message, _) =>
         {
             if (IsCurrentlyUnderMaintenance())
@@ -129,9 +138,9 @@ public sealed class ClickTrackingWorker(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(10, stoppingToken).ConfigureAwait(false);
+        await Task.Delay(InitialDelayMilliseconds, stoppingToken).ConfigureAwait(false);
         // Setup exchanges and queues
-        mainExchange = await bus.Advanced.ExchangeDeclareAsync(mainExchangeName, ExchangeType.Direct);
+        var mainExchange = await bus.Advanced.ExchangeDeclareAsync(mainExchangeName, ExchangeType.Direct);
         retryExchange = await bus.Advanced.ExchangeDeclareAsync(retryExchangeName, ExchangeType.Direct);
         errorExchange = await bus.Advanced.ExchangeDeclareAsync(errorExchangeName, ExchangeType.Direct);
 
@@ -142,7 +151,7 @@ public sealed class ClickTrackingWorker(
             .WithArgument("x-queue-type", "quorum")
         );
 
-        retryQueue = await bus.Advanced.QueueDeclareAsync(retryQueueName, c => c
+        var retryQueue = await bus.Advanced.QueueDeclareAsync(retryQueueName, c => c
             .AsDurable(true)
             .AsExclusive(false)
             .AsAutoDelete(false)
@@ -151,7 +160,7 @@ public sealed class ClickTrackingWorker(
             .WithArgument("x-message-ttl", timeToReQueue)
         );
 
-        errorQueue = await bus.Advanced.QueueDeclareAsync(errorQueueName, c => c
+        var errorQueue = await bus.Advanced.QueueDeclareAsync(errorQueueName, c => c
             .AsDurable(true)
             .AsExclusive(false)
             .AsAutoDelete(false)
