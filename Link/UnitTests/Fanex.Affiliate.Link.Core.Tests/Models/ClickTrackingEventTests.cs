@@ -159,3 +159,4 @@ public class ClickTrackingEventTests
         clickEvent.ClickId.Should().Be(-1);
     }
 }
+
