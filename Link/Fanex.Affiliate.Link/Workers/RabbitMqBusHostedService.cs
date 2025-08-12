@@ -29,21 +29,17 @@ public class RabbitMqBusHostedService : BackgroundService
         if (string.IsNullOrEmpty(connStr))
         {
             await logService.SentryErrorAsync("RabbitMQ connection string is not configured");
-            return;
         }
 
         bus = RabbitHutch.CreateBus(connStr);
-        if (bus?.Advanced != null)
+        bus.Advanced.Connected += (s, e) =>
         {
-            bus.Advanced.Connected += (_, _) =>
-            {
-                logService.LogFileMessage("RabbitMQ connected.");
-            };
-            bus.Advanced.Disconnected += async (_, _) =>
-            {
-                await TryConnectToRabbitMqAsync(stoppingToken);
-            };
-        }
+            logService.LogFileMessage("RabbitMQ connected.");
+        };
+        bus.Advanced.Disconnected += async (s, e) =>
+        {
+            await TryConnectToRabbitMqAsync(stoppingToken);
+        };
 
         await TryConnectToRabbitMqAsync(stoppingToken);
     }
@@ -60,16 +56,9 @@ public class RabbitMqBusHostedService : BackgroundService
         {
             try
             {
-                if (bus?.Advanced == null)
-                {
-                    await logService.SentryErrorAsync("RabbitMQ bus is not available");
-                    await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
-                    continue;
-                }
-
-                const string exchangeName = $"{Core.Constants.QueueIdentify}.exchange";
-                const string queueName = $"{Core.Constants.QueueIdentify}.queue";
-                const string routingKey = $"{Core.Constants.QueueIdentify}.routing";
+                var exchangeName = $"{Core.Constants.QueueIdentify}.exchange";
+                var queueName = $"{Core.Constants.QueueIdentify}.queue";
+                var routingKey = $"{Core.Constants.QueueIdentify}.routing";
                 var exchange = await bus.Advanced.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct);
                 var queue = await bus.Advanced.QueueDeclareAsync(queueName, c =>
                 {
