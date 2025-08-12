@@ -47,3 +47,4 @@ node_modules
 *.UnitTestCoverage_*.xml
 Link/run-sonar.ps1
 Link/.sonarqube
+Link/UnitTests/Fanex.Affiliate.Link.Tests/coverage

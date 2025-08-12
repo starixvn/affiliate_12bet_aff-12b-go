@@ -56,6 +56,13 @@ public class RabbitMqBusHostedService : BackgroundService
         {
             try
             {
+                if (bus == null)
+                {
+                    await logService.SentryErrorAsync("RabbitMQ bus is not initialized");
+                    await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                    continue;
+                }
+
                 var exchangeName = $"{Core.Constants.QueueIdentify}.exchange";
                 var queueName = $"{Core.Constants.QueueIdentify}.queue";
                 var routingKey = $"{Core.Constants.QueueIdentify}.routing";

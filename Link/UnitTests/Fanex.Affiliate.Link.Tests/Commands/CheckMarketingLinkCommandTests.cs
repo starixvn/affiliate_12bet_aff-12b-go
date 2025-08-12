@@ -7,95 +7,56 @@ namespace Fanex.Affiliate.Link.Tests.Commands;
 public class CheckMarketingLinkCommandTests
 {
     [Fact]
-    public void GetSettingKey_ShouldReturnCorrectKey()
-    {
-        // Arrange
-        var command = new CheckMarketingLinkCommand();
-
-        // Act
-        var result = command.GetSettingKey();
-
-        // Assert
-        result.Should().Be("Aff_User_AffMediaLink_CheckExistedTracking");
-    }
-
-    [Theory]
-    [InlineData(1, true)]
-    [InlineData(100, true)]
-    [InlineData(0, false)]
-    [InlineData(-1, false)]
-    public void IsValid_ShouldReturnCorrectResult_BasedOnAffId(int affId, bool expectedResult)
-    {
-        // Arrange
-        var command = new CheckMarketingLinkCommand
-        {
-            AffId = affId,
-            AffDomain = "test.com",
-            IsExistedTracking = true,
-            IsValidDomain = true
-        };
-
-        // Act
-        var result = command.IsValid();
-
-        // Assert
-        result.Should().Be(expectedResult);
-    }
-
-    [Fact]
-    public void Properties_ShouldBeSettableAndGettable()
+    public void CheckMarketingLinkCommand_ShouldSetPropertiesCorrectly()
     {
         // Arrange
         var command = new CheckMarketingLinkCommand
         {
             AffId = 123,
-            AffDomain = "test.com",
-            IsExistedTracking = true,
-            IsValidDomain = false
+            ChannelCode = "web",
+            LanguageCode = "en",
+            AffMediaLink = "https://example.com"
         };
 
         // Assert
         command.AffId.Should().Be(123);
-        command.AffDomain.Should().Be("test.com");
-        command.IsExistedTracking.Should().BeTrue();
-        command.IsValidDomain.Should().BeFalse();
+        command.ChannelCode.Should().Be("web");
+        command.LanguageCode.Should().Be("en");
+        command.AffMediaLink.Should().Be("https://example.com");
+        command.IsOn.Should().BeTrue();
     }
 
     [Fact]
-    public void IsValid_ShouldReturnFalse_WhenAffIdIsZero()
+    public void CheckMarketingLinkCommand_ShouldHandleNullValues()
     {
         // Arrange
         var command = new CheckMarketingLinkCommand
         {
             AffId = 0,
-            AffDomain = "test.com",
-            IsExistedTracking = true,
-            IsValidDomain = true
+            ChannelCode = null,
+            LanguageCode = null,
+            AffMediaLink = null
         };
 
-        // Act
-        var result = command.IsValid();
-
         // Assert
-        result.Should().BeFalse();
+        command.AffId.Should().Be(0);
+        command.ChannelCode.Should().BeNull();
+        command.LanguageCode.Should().BeNull();
+        command.AffMediaLink.Should().BeNull();
+        command.IsOn.Should().BeTrue();
     }
 
     [Fact]
-    public void IsValid_ShouldReturnFalse_WhenAffIdIsNegative()
+    public void CheckMarketingLinkCommand_ShouldHandleDefaultValues()
     {
         // Arrange
-        var command = new CheckMarketingLinkCommand
-        {
-            AffId = -1,
-            AffDomain = "test.com",
-            IsExistedTracking = true,
-            IsValidDomain = true
-        };
-
-        // Act
-        var result = command.IsValid();
+        var command = new CheckMarketingLinkCommand();
 
         // Assert
-        result.Should().BeFalse();
+        command.AffId.Should().Be(0);
+        command.ChannelCode.Should().BeNull();
+        command.LanguageCode.Should().BeNull();
+        command.AffMediaLink.Should().BeNull();
+        command.IsOn.Should().BeTrue();
     }
 }

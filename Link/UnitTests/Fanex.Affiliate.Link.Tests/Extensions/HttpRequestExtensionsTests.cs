@@ -1,9 +1,7 @@
-using Fanex.Affiliate.Link.Constants;
 using Fanex.Affiliate.Link.Extensions;
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Moq;
 using System.Net;
+using FluentAssertions;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Extensions;
@@ -11,90 +9,60 @@ namespace Fanex.Affiliate.Link.Tests.Extensions;
 public class HttpRequestExtensionsTests
 {
     [Fact]
-    public void GetClientIP_ShouldReturnXActualIP_WhenHeaderExists()
+    public void GetClientIP_ShouldReturnXActualIP_WhenPresent()
     {
         // Arrange
-        var mockRequest = new Mock<HttpRequest>();
-        var mockHeaders = new Mock<IHeaderDictionary>();
-        var mockConnection = new Mock<ConnectionInfo>();
-
-        mockHeaders.Setup(x => x[HeaderKey.X_ACTUAL_IP]).Returns("192.168.1.100");
-        mockHeaders.Setup(x => x[HeaderKey.X_FORWARDED_FOR]).Returns("10.0.0.1");
-        mockRequest.Setup(x => x.Headers).Returns(mockHeaders.Object);
-        mockRequest.Setup(x => x.HttpContext).Returns(new Mock<HttpContext>().Object);
-        mockRequest.Setup(x => x.HttpContext.Connection).Returns(mockConnection.Object);
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Headers["X-Actual-IP"] = "192.168.1.100";
 
         // Act
-        var result = mockRequest.Object.GetClientIP();
+        var result = request.GetClientIP();
 
         // Assert
         result.Should().Be("192.168.1.100");
     }
 
     [Fact]
-    public void GetClientIP_ShouldReturnXForwardedFor_WhenXActualIPNotExists()
+    public void GetClientIP_ShouldReturnXForwardedFor_WhenXActualIPNotPresent()
     {
         // Arrange
-        var mockRequest = new Mock<HttpRequest>();
-        var mockHeaders = new Mock<IHeaderDictionary>();
-        var mockConnection = new Mock<ConnectionInfo>();
-
-        mockHeaders.Setup(x => x[HeaderKey.X_ACTUAL_IP]).Returns((string)null);
-        mockHeaders.Setup(x => x[HeaderKey.X_FORWARDED_FOR]).Returns("10.0.0.1");
-        mockRequest.Setup(x => x.Headers).Returns(mockHeaders.Object);
-        mockRequest.Setup(x => x.HttpContext).Returns(new Mock<HttpContext>().Object);
-        mockRequest.Setup(x => x.HttpContext.Connection).Returns(mockConnection.Object);
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Headers["X-Forwarded-For"] = "192.168.1.200";
 
         // Act
-        var result = mockRequest.Object.GetClientIP();
+        var result = request.GetClientIP();
 
         // Assert
-        result.Should().Be("10.0.0.1");
+        result.Should().Be("192.168.1.200");
     }
 
     [Fact]
-    public void GetClientIP_ShouldReturnRemoteIPAddress_WhenHeadersNotExist()
+    public void GetClientIP_ShouldReturnRemoteIPAddress_WhenHeadersNotPresent()
     {
         // Arrange
-        var mockRequest = new Mock<HttpRequest>();
-        var mockHeaders = new Mock<IHeaderDictionary>();
-        var mockConnection = new Mock<ConnectionInfo>();
-        var mockHttpContext = new Mock<HttpContext>();
-
-        mockHeaders.Setup(x => x[HeaderKey.X_ACTUAL_IP]).Returns((string)null);
-        mockHeaders.Setup(x => x[HeaderKey.X_FORWARDED_FOR]).Returns((string)null);
-        mockConnection.Setup(x => x.RemoteIpAddress).Returns(IPAddress.Parse("172.16.0.1"));
-        
-        mockRequest.Setup(x => x.Headers).Returns(mockHeaders.Object);
-        mockRequest.Setup(x => x.HttpContext).Returns(mockHttpContext.Object);
-        mockHttpContext.Setup(x => x.Connection).Returns(mockConnection.Object);
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        context.Connection.RemoteIpAddress = IPAddress.Parse("127.0.0.1");
 
         // Act
-        var result = mockRequest.Object.GetClientIP();
+        var result = request.GetClientIP();
 
         // Assert
-        result.Should().Be("172.16.0.1");
+        result.Should().Be("127.0.0.1");
     }
 
     [Fact]
     public void GetClientIP_ShouldReturnLocalhost_WhenRemoteIPIsIPv6Localhost()
     {
         // Arrange
-        var mockRequest = new Mock<HttpRequest>();
-        var mockHeaders = new Mock<IHeaderDictionary>();
-        var mockConnection = new Mock<ConnectionInfo>();
-        var mockHttpContext = new Mock<HttpContext>();
-
-        mockHeaders.Setup(x => x[HeaderKey.X_ACTUAL_IP]).Returns((string)null);
-        mockHeaders.Setup(x => x[HeaderKey.X_FORWARDED_FOR]).Returns((string)null);
-        mockConnection.Setup(x => x.RemoteIpAddress).Returns(IPAddress.IPv6Loopback);
-        
-        mockRequest.Setup(x => x.Headers).Returns(mockHeaders.Object);
-        mockRequest.Setup(x => x.HttpContext).Returns(mockHttpContext.Object);
-        mockHttpContext.Setup(x => x.Connection).Returns(mockConnection.Object);
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        context.Connection.RemoteIpAddress = IPAddress.IPv6Loopback;
 
         // Act
-        var result = mockRequest.Object.GetClientIP();
+        var result = request.GetClientIP();
 
         // Assert
         result.Should().Be("127.0.0.1");
@@ -104,42 +72,27 @@ public class HttpRequestExtensionsTests
     public void GetClientIP_ShouldReturnFirstValidIP_WhenMultipleIPsInHeader()
     {
         // Arrange
-        var mockRequest = new Mock<HttpRequest>();
-        var mockHeaders = new Mock<IHeaderDictionary>();
-        var mockConnection = new Mock<ConnectionInfo>();
-
-        mockHeaders.Setup(x => x[HeaderKey.X_ACTUAL_IP]).Returns((string)null);
-        mockHeaders.Setup(x => x[HeaderKey.X_FORWARDED_FOR]).Returns("192.168.1.100, 10.0.0.1, 172.16.0.1");
-        mockRequest.Setup(x => x.Headers).Returns(mockHeaders.Object);
-        mockRequest.Setup(x => x.HttpContext).Returns(new Mock<HttpContext>().Object);
-        mockRequest.Setup(x => x.HttpContext.Connection).Returns(mockConnection.Object);
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Headers["X-Forwarded-For"] = "192.168.1.100, 10.0.0.1, invalid-ip";
 
         // Act
-        var result = mockRequest.Object.GetClientIP();
+        var result = request.GetClientIP();
 
         // Assert
         result.Should().Be("192.168.1.100");
     }
 
     [Fact]
-    public void GetClientIP_ShouldReturnNull_WhenNoValidIPsFound()
+    public void GetClientIP_ShouldReturnNull_WhenNoValidIPs()
     {
         // Arrange
-        var mockRequest = new Mock<HttpRequest>();
-        var mockHeaders = new Mock<IHeaderDictionary>();
-        var mockConnection = new Mock<ConnectionInfo>();
-        var mockHttpContext = new Mock<HttpContext>();
-
-        mockHeaders.Setup(x => x[HeaderKey.X_ACTUAL_IP]).Returns((string)null);
-        mockHeaders.Setup(x => x[HeaderKey.X_FORWARDED_FOR]).Returns("invalid-ip, another-invalid");
-        mockConnection.Setup(x => x.RemoteIpAddress).Returns((IPAddress)null);
-        
-        mockRequest.Setup(x => x.Headers).Returns(mockHeaders.Object);
-        mockRequest.Setup(x => x.HttpContext).Returns(mockHttpContext.Object);
-        mockHttpContext.Setup(x => x.Connection).Returns(mockConnection.Object);
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Headers["X-Forwarded-For"] = "invalid-ip, another-invalid";
 
         // Act
-        var result = mockRequest.Object.GetClientIP();
+        var result = request.GetClientIP();
 
         // Assert
         result.Should().BeNull();
@@ -149,45 +102,43 @@ public class HttpRequestExtensionsTests
     public void GetClientIP_ShouldHandleEmptyHeaders()
     {
         // Arrange
-        var mockRequest = new Mock<HttpRequest>();
-        var mockHeaders = new Mock<IHeaderDictionary>();
-        var mockConnection = new Mock<ConnectionInfo>();
-        var mockHttpContext = new Mock<HttpContext>();
-
-        mockHeaders.Setup(x => x[HeaderKey.X_ACTUAL_IP]).Returns("");
-        mockHeaders.Setup(x => x[HeaderKey.X_FORWARDED_FOR]).Returns("");
-        mockConnection.Setup(x => x.RemoteIpAddress).Returns(IPAddress.Parse("192.168.1.1"));
-        
-        mockRequest.Setup(x => x.Headers).Returns(mockHeaders.Object);
-        mockRequest.Setup(x => x.HttpContext).Returns(mockHttpContext.Object);
-        mockHttpContext.Setup(x => x.Connection).Returns(mockConnection.Object);
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Headers["X-Forwarded-For"] = "";
 
         // Act
-        var result = mockRequest.Object.GetClientIP();
+        var result = request.GetClientIP();
 
         // Assert
-        result.Should().Be("192.168.1.1");
+        result.Should().BeNull();
     }
 
     [Fact]
-    public void GetClientIP_ShouldHandleWhitespaceInHeaders()
+    public void GetClientIP_ShouldHandleWhitespaceHeaders()
     {
         // Arrange
-        var mockRequest = new Mock<HttpRequest>();
-        var mockHeaders = new Mock<IHeaderDictionary>();
-        var mockConnection = new Mock<ConnectionInfo>();
-        var mockHttpContext = new Mock<HttpContext>();
-
-        mockHeaders.Setup(x => x[HeaderKey.X_ACTUAL_IP]).Returns("   ");
-        mockHeaders.Setup(x => x[HeaderKey.X_FORWARDED_FOR]).Returns("  192.168.1.100  ");
-        mockConnection.Setup(x => x.RemoteIpAddress).Returns(IPAddress.Parse("172.16.0.1"));
-        
-        mockRequest.Setup(x => x.Headers).Returns(mockHeaders.Object);
-        mockRequest.Setup(x => x.HttpContext).Returns(mockHttpContext.Object);
-        mockHttpContext.Setup(x => x.Connection).Returns(mockConnection.Object);
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Headers["X-Forwarded-For"] = "   ";
 
         // Act
-        var result = mockRequest.Object.GetClientIP();
+        var result = request.GetClientIP();
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetClientIP_ShouldPrioritizeXActualIP_OverXForwardedFor()
+    {
+        // Arrange
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Headers["X-Actual-IP"] = "192.168.1.100";
+        request.Headers["X-Forwarded-For"] = "192.168.1.200";
+
+        // Act
+        var result = request.GetClientIP();
 
         // Assert
         result.Should().Be("192.168.1.100");

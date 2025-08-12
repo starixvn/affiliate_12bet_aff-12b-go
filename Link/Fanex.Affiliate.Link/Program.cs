@@ -63,9 +63,11 @@ builder.Services.AddSingleton<IRabbitBus, Fanex.Affiliate.Link.Core.Services.Rab
 builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 
 builder.Services.AddOneBookUmForService(builder.Configuration);
-const short workerThreads = 300;
-const short completionPortThreads = 300;
-_ = ThreadPool.SetMinThreads(workerThreads, completionPortThreads);
+
+// Configure thread pool settings
+const short DefaultWorkerThreads = 300;
+const short DefaultCompletionPortThreads = 300;
+_ = ThreadPool.SetMinThreads(DefaultWorkerThreads, DefaultCompletionPortThreads);
 
 var app = builder.Build();
 

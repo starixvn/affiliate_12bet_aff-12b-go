@@ -98,7 +98,7 @@ public class ClickTrackingEventServiceTests
         };
 
         _mockMemoryCacheService.Setup(x => x.Get<CheckMarketingLinkResult>(It.IsAny<string>()))
-            .Returns((CheckMarketingLinkResult?)null);
+            .Returns((CheckMarketingLinkResult)null);
 
         // Act
         var result = await _service.GetTrackingMarketingLinkInfo(command);
@@ -170,7 +170,7 @@ public class ClickTrackingEventServiceTests
     {
         // Arrange
         _mockMemoryCacheService.Setup(x => x.Get<IEnumerable<MarketInfo>>(It.IsAny<string>()))
-            .Returns((IEnumerable<MarketInfo>?)null);
+            .Returns((IEnumerable<MarketInfo>)null);
 
         // Act
         var result = await _service.GetMarkets();
@@ -200,7 +200,7 @@ public class ClickTrackingEventServiceTests
     {
         // Arrange
         _mockMemoryCacheService.Setup(x => x.Get<MarketInfo>(It.IsAny<string>()))
-            .Returns((MarketInfo?)null);
+            .Returns((MarketInfo)null);
 
         // Act
         var result = await _service.GetMarketInfo("en");

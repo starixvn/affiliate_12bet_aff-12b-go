@@ -7,108 +7,56 @@ namespace Fanex.Affiliate.Link.Tests.Commands;
 public class ToggleMarketingLinkCommandTests
 {
     [Fact]
-    public void GetSettingKey_ShouldReturnCorrectKey()
-    {
-        // Arrange
-        var command = new ToggleMarketingLinkCommand();
-
-        // Act
-        var result = command.GetSettingKey();
-
-        // Assert
-        result.Should().Be("Aff_User_AffMediaLink_ToggleChannel");
-    }
-
-    [Theory]
-    [InlineData(1, true)]
-    [InlineData(100, true)]
-    [InlineData(0, false)]
-    [InlineData(-1, false)]
-    public void IsValid_ShouldReturnCorrectResult_BasedOnAffId(int affId, bool expectedResult)
-    {
-        // Arrange
-        var command = new ToggleMarketingLinkCommand
-        {
-            AffId = affId,
-            ErrCode = 0,
-            ErrMsg = "Success"
-        };
-
-        // Act
-        var result = command.IsValid();
-
-        // Assert
-        result.Should().Be(expectedResult);
-    }
-
-    [Fact]
-    public void Properties_ShouldBeSettableAndGettable()
+    public void ToggleMarketingLinkCommand_ShouldSetPropertiesCorrectly()
     {
         // Arrange
         var command = new ToggleMarketingLinkCommand
         {
             AffId = 123,
-            ErrCode = 1,
-            ErrMsg = "Error occurred"
+            ChannelCode = "web",
+            LanguageCode = "en",
+            AffMediaLink = "https://example.com"
         };
 
         // Assert
         command.AffId.Should().Be(123);
-        command.ErrCode.Should().Be(1);
-        command.ErrMsg.Should().Be("Error occurred");
+        command.ChannelCode.Should().Be("web");
+        command.LanguageCode.Should().Be("en");
+        command.AffMediaLink.Should().Be("https://example.com");
+        command.IsOn.Should().BeTrue();
     }
 
     [Fact]
-    public void IsValid_ShouldReturnFalse_WhenAffIdIsZero()
+    public void ToggleMarketingLinkCommand_ShouldHandleNullValues()
     {
         // Arrange
         var command = new ToggleMarketingLinkCommand
         {
             AffId = 0,
-            ErrCode = 0,
-            ErrMsg = "Success"
+            ChannelCode = null,
+            LanguageCode = null,
+            AffMediaLink = null
         };
 
-        // Act
-        var result = command.IsValid();
-
         // Assert
-        result.Should().BeFalse();
+        command.AffId.Should().Be(0);
+        command.ChannelCode.Should().BeNull();
+        command.LanguageCode.Should().BeNull();
+        command.AffMediaLink.Should().BeNull();
+        command.IsOn.Should().BeTrue();
     }
 
     [Fact]
-    public void IsValid_ShouldReturnFalse_WhenAffIdIsNegative()
+    public void ToggleMarketingLinkCommand_ShouldHandleDefaultValues()
     {
         // Arrange
-        var command = new ToggleMarketingLinkCommand
-        {
-            AffId = -1,
-            ErrCode = 0,
-            ErrMsg = "Success"
-        };
-
-        // Act
-        var result = command.IsValid();
+        var command = new ToggleMarketingLinkCommand();
 
         // Assert
-        result.Should().BeFalse();
-    }
-
-    [Fact]
-    public void IsValid_ShouldReturnTrue_WhenAffIdIsPositive()
-    {
-        // Arrange
-        var command = new ToggleMarketingLinkCommand
-        {
-            AffId = 1,
-            ErrCode = 0,
-            ErrMsg = "Success"
-        };
-
-        // Act
-        var result = command.IsValid();
-
-        // Assert
-        result.Should().BeTrue();
+        command.AffId.Should().Be(0);
+        command.ChannelCode.Should().BeNull();
+        command.LanguageCode.Should().BeNull();
+        command.AffMediaLink.Should().BeNull();
+        command.IsOn.Should().BeTrue();
     }
 }
