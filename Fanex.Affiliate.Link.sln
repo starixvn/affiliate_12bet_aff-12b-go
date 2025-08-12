@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link", "Fanex.Affiliate.Link\Fanex.Affiliate.Link.csproj", "{6CE25B47-449E-4282-A956-BAADC31CB372}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link", "Link\Fanex.Affiliate.Link\Fanex.Affiliate.Link.csproj", "{6CE25B47-449E-4282-A956-BAADC31CB372}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Core", "Fanex.Affiliate.Link.Core\Fanex.Affiliate.Link.Core.csproj", "{486C6ADD-E561-4200-F552-9D0FE4AA1D52}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Core", "Link\Fanex.Affiliate.Link.Core\Fanex.Affiliate.Link.Core.csproj", "{486C6ADD-E561-4200-F552-9D0FE4AA1D52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Consumer", "Fanex.Affiliate.Link.Consumer\Fanex.Affiliate.Link.Consumer.csproj", "{5D0677DF-05A3-03A4-1404-48EB64BF7A5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Consumer", "Link\Fanex.Affiliate.Link.Consumer\Fanex.Affiliate.Link.Consumer.csproj", "{5D0677DF-05A3-03A4-1404-48EB64BF7A5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
