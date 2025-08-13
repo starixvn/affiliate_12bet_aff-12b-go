@@ -15,12 +15,11 @@ public static class LoggingConfig
             .AddEnvironmentVariables()
             .Build();
 
-        var env = configuration["AppSettings:Environment"];
-        var backEndDsn = configuration["AppSettings:SentryBackEndDsn"];
-        var category = configuration["AppSettings:LoggingCategory"];
-        var isRegisterSentry = string.Equals(configuration["AppSettings:IsRegisterSentry"], "true", StringComparison.CurrentCultureIgnoreCase);
+        var env = configuration["Sentry:Environment"];
+        var backEndDsn = configuration["Sentry:Dsn"];
+        var category = configuration["Sentry:LogCategory"];
 
-        if (isRegisterSentry && !string.IsNullOrEmpty(backEndDsn))
+        if (!string.IsNullOrEmpty(backEndDsn))
         {
             LogManager.SetDefaultLogCategory(category).Use(new List<ILogEngine>
             {
