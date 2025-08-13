@@ -2,16 +2,16 @@ FROM hub.nexdev.net/base/dotnet/core/sdk:9.0-alpine AS builder
 WORKDIR /src
 
 COPY *.sln .
-COPY Link/Fanex.Affiliate.Link.Consumer/Fanex.Affiliate.Link.Consumer.csproj ./Fanex.Affiliate.Link.Consumer/
-COPY Link/Fanex.Affiliate.Link.Core/Fanex.Affiliate.Link.Core.csproj ./Fanex.Affiliate.Link.Core/
+COPY Fanex.Affiliate.Link.Consumer/Fanex.Affiliate.Link.Consumer.csproj ./Fanex.Affiliate.Link.Consumer/
+COPY Fanex.Affiliate.Link.Core/Fanex.Affiliate.Link.Core.csproj ./Fanex.Affiliate.Link.Core/
 
 RUN dotnet nuget add source https://nuget.nexdev.net/api/v2
 
 RUN --mount=type=cache,target=/root/.nuget/packages \
 	dotnet restore -v n ./Fanex.Affiliate.Link.Consumer/Fanex.Affiliate.Link.Consumer.csproj
 
-COPY Link/Fanex.Affiliate.Link.Consumer/. ./Fanex.Affiliate.Link.Consumer/
-COPY Link/Fanex.Affiliate.Link.Core/. ./Fanex.Affiliate.Link.Core/
+COPY Fanex.Affiliate.Link.Consumer/. ./Fanex.Affiliate.Link.Consumer/
+COPY Fanex.Affiliate.Link.Core/. ./Fanex.Affiliate.Link.Core/
 
 WORKDIR /src/Fanex.Affiliate.Link.Consumer
 
