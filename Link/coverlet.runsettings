@@ -13,6 +13,7 @@
             **/Fanex.Affiliate.Link/App_Start/**/*.cs;
             **/Fanex.Affiliate.Link/Program.cs;
             **/Fanex.Affiliate.Link/Controllers/HealthCheckController.cs;
+            **/Fanex.Affiliate.Link/Attributes/HealthCheckAuthAttribute.cs;
             **/Fanex.Affiliate.Link/Views/**/*.cshtml
           </ExcludeByFile>
           <!-- Defensive type-based exclude as well -->
