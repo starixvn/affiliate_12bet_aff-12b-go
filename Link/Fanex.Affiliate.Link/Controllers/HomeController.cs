@@ -262,7 +262,7 @@
                 var commGroup = masterInfoValidation.AffCommGroups.FirstOrDefault(m => m.AffCode == clickTrackingEvent.AffCode);
                 if (commGroup != null)
                 {
-                    validateResult.IsAffMarketing = marketingForCommGroups.ToList().Exists(c => c.MatchWith(commGroup.GroupName));
+                    validateResult.IsAffMarketing = marketingForCommGroups.ToList().Exists(c => c.MatchWith(commGroup.DealName));
                 }
             }
 

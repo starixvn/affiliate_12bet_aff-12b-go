@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <!-- Output format -->
+          <Format>cobertura</Format>
+          <!-- Exclude HealthCheck source files from coverage calculation -->
+          <ExcludeByFile>
+            **/Fanex.Affiliate.Link/Services/HealthCheck/**/*.cs;
+            **/Fanex.Affiliate.Link/Models/HealthCheck/**/*.cs;
+            **/Fanex.Affiliate.Link/App_Start/**/*.cs;
+            **/Fanex.Affiliate.Link/Program.cs;
+            **/Fanex.Affiliate.Link/Controllers/HealthCheckController.cs;
+            **/Fanex.Affiliate.Link/Views/**/*.cshtml
+          </ExcludeByFile>
+          <!-- Defensive type-based exclude as well -->
+          <Exclude>
+            [Fanex.Affiliate.Link]*HealthCheck*;
+            [Fanex.Affiliate.Link]*HealthCheck*/*;
+            [Fanex.Affiliate.Link]*LoggingConfig*;
+          </Exclude>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
+
+

@@ -67,6 +67,153 @@ public class ClickTrackingRedisStorageWorkerTests
     }
 
     [Fact]
+    public async Task StartConsumer_ShouldCallRedisService_WhenNotUnderMaintenance()
+    {
+        // Arrange
+        var maintenanceTime = new UnderMaintenanceTime { IsUnderMaintenanceTime = false };
+        _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
+        
+        _mockRedisService.Setup(x => x.ListLeftPopAsync<ClickTrackingEvent>(It.IsAny<string>()))
+            .ReturnsAsync((ClickTrackingEvent)null);
+
+        // Act
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
+        await task;
+
+        // Assert - Redis service should be called at least once
+        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task StartConsumer_ShouldNotRun_WhenUnderMaintenance()
+    {
+        // Arrange
+        var maintenanceTime = new UnderMaintenanceTime { IsUnderMaintenanceTime = true };
+        _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
+
+        // Act
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
+        await task;
+
+        // Assert
+        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(It.IsAny<string>()), Times.Never);
+        _mockDatabaseService.Verify(x => x.InsertClickInfo(It.IsAny<ClickTrackingEvent>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task StartConsumer_ShouldProcessMessages_WhenAvailable()
+    {
+        // Arrange
+        var maintenanceTime = new UnderMaintenanceTime { IsUnderMaintenanceTime = false };
+        _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
+
+        var clickEvent = ClickTrackingRedisStorageWorkerExtensions.CreateValidClickTrackingEvent();
+        _mockRedisService.SetupSequence(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName))
+            .ReturnsAsync(clickEvent)
+            .ReturnsAsync((ClickTrackingEvent)null);
+
+        _mockDatabaseService.Setup(x => x.InsertClickInfo(It.IsAny<ClickTrackingEvent>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
+        await task;
+
+        // Assert
+        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName), Times.AtLeast(2));
+        _mockDatabaseService.Verify(x => x.InsertClickInfo(clickEvent), Times.Once);
+    }
+
+    [Fact]
+    public async Task StartConsumer_ShouldHandleException_AndLogError()
+    {
+        // Arrange
+        var maintenanceTime = new UnderMaintenanceTime { IsUnderMaintenanceTime = false };
+        _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
+
+        var exception = new Exception("Test exception");
+        _mockRedisService.Setup(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName))
+            .ThrowsAsync(exception);
+
+        // Act
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
+        await task;
+
+        // Assert
+        _mockLogService.Verify(x => x.SentryErrorAsync(exception), Times.Once);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ShouldLogWorkerRunning()
+    {
+        // Arrange
+        var maintenanceTime = new UnderMaintenanceTime { IsUnderMaintenanceTime = false };
+        _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
+        
+        _mockRedisService.Setup(x => x.ListLeftPopAsync<ClickTrackingEvent>(It.IsAny<string>()))
+            .ReturnsAsync((ClickTrackingEvent)null);
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(100);
+
+        // Act
+        try
+        {
+            await _worker.StartAsync(cts.Token);
+            await Task.Delay(50, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
+        finally
+        {
+            await _worker.StopAsync(CancellationToken.None);
+        }
+
+        // Assert
+        _mockLogService.Verify(x => x.LogFileMessage(
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task StopAsync_ShouldCompleteSuccessfully()
+    {
+        // Arrange
+        var maintenanceTime = new UnderMaintenanceTime { IsUnderMaintenanceTime = false };
+        _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(50);
+
+        try
+        {
+            await _worker.StartAsync(cts.Token);
+            await Task.Delay(25, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected
+        }
+
+        // Act & Assert - Should not throw
+        await _worker.StopAsync(CancellationToken.None);
+    }
+
+    [Fact]
     public void Constants_ShouldHaveCorrectValues()
     {
         // Assert
@@ -83,5 +230,31 @@ public static class ClickTrackingRedisStorageWorkerExtensions
         var method = typeof(ClickTrackingRedisStorageWorker).GetMethod("IsCurrentlyUnderMaintenance", 
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (bool)method!.Invoke(worker, null)!;
+    }
+
+    public static ClickTrackingEvent CreateValidClickTrackingEvent()
+    {
+        return new ClickTrackingEvent
+        {
+            ClickId = 123,
+            AffCode = "TEST",
+            AffDomain = "test.com",
+            PageCode = "PAGE1",
+            LanguageCode = "EN",
+            ChannelCode = "WEB",
+            IP = "127.0.0.1",
+            Browser = "Chrome",
+            UrlReferrer = "http://test.com",
+            DomainReferrer = "test.com",
+            OS = "Windows",
+            Device = "Desktop",
+            BrowserVersion = "100.0",
+            BrowserResolution = "1920x1080",
+            BrowserLanguage = "en-US",
+            UserAgent = "Mozilla/5.0",
+            Country = "US",
+            RedirectLink = "http://redirect.com",
+            AffMediaLink = "http://media.com"
+        };
     }
 }

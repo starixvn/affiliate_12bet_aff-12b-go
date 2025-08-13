@@ -11,4 +11,10 @@ public class DomainMapping
     public string RedirectDomain { get; set; }
 
     public bool IsSSL { get; set; }
+
+    public bool IsMobile { get; set; }
+
+    public bool IsExcluded { get; set; }
+
+    public string DealIds { get; set; }
 }

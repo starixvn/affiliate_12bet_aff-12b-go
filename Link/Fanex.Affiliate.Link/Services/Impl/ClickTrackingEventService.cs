@@ -114,7 +114,7 @@
             if (masterInfoValidation is null)
             {
                 var criteria = new GetMasterDataForValidateClickedCriteria();
-                var results = await dynamicRepository.FetchMultipleAsync<SpecialDomainMapping, DomainMapping, LanguageReference, AffiliateCommGroup>(criteria);
+                var results = await dynamicRepository.FetchMultipleAsync<SpecialDomainMapping, DomainMapping, LanguageReference, AffiliateCommGroup, LandingPageSetting>(criteria);
 
                 masterInfoValidation = new MasterInfoValidation
                 {
@@ -122,6 +122,7 @@
                     DomainMappings = results.Item2,
                     LanguageReferences = results.Item3,
                     AffCommGroups = results.Item4,
+                    LandingPages = results.Item5
                 };
 
                 await redisService.SetAsync(cacheKey, masterInfoValidation, slidingExpirationTime);

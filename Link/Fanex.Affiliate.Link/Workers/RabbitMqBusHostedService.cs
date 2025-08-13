@@ -32,11 +32,11 @@ public class RabbitMqBusHostedService : BackgroundService
         }
 
         bus = RabbitHutch.CreateBus(connStr);
-        bus.Advanced.Connected += (s, e) =>
+        bus.Advanced.Connected += (_, _) =>
         {
             logService.LogFileMessage("RabbitMQ connected.");
         };
-        bus.Advanced.Disconnected += async (s, e) =>
+        bus.Advanced.Disconnected += async (_, _) =>
         {
             await TryConnectToRabbitMqAsync(stoppingToken);
         };
@@ -63,9 +63,9 @@ public class RabbitMqBusHostedService : BackgroundService
                     continue;
                 }
 
-                var exchangeName = $"{Core.Constants.QueueIdentify}.exchange";
-                var queueName = $"{Core.Constants.QueueIdentify}.queue";
-                var routingKey = $"{Core.Constants.QueueIdentify}.routing";
+                const string exchangeName = $"{Core.Constants.QueueIdentify}.exchange";
+                const string queueName = $"{Core.Constants.QueueIdentify}.queue";
+                const string routingKey = $"{Core.Constants.QueueIdentify}.routing";
                 var exchange = await bus.Advanced.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct);
                 var queue = await bus.Advanced.QueueDeclareAsync(queueName, c =>
                 {

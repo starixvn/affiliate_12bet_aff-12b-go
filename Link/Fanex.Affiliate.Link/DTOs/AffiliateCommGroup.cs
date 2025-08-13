@@ -4,7 +4,9 @@
     {
         public string AffCode { get; set; }
 
-        public string GroupName { get; set; }
+        public int DealId { get; set; }
+
+        public string DealName { get; set; }
 
         public string TargetCountryCode { get; set; }
     }

@@ -13,13 +13,13 @@ public class AffiliateCommGroupTests
         var affiliateCommGroup = new AffiliateCommGroup
         {
             AffCode = "TEST123",
-            GroupName = "Test Group",
+            DealName = "Test Group",
             TargetCountryCode = "US"
         };
 
         // Assert
         affiliateCommGroup.AffCode.Should().Be("TEST123");
-        affiliateCommGroup.GroupName.Should().Be("Test Group");
+        affiliateCommGroup.DealName.Should().Be("Test Group");
         affiliateCommGroup.TargetCountryCode.Should().Be("US");
     }
 
@@ -31,7 +31,7 @@ public class AffiliateCommGroupTests
 
         // Assert
         affiliateCommGroup.AffCode.Should().BeNull();
-        affiliateCommGroup.GroupName.Should().BeNull();
+        affiliateCommGroup.DealName.Should().BeNull();
         affiliateCommGroup.TargetCountryCode.Should().BeNull();
     }
 
@@ -43,12 +43,12 @@ public class AffiliateCommGroupTests
 
         // Act
         affiliateCommGroup.AffCode = "UPDATED123";
-        affiliateCommGroup.GroupName = "Updated Group";
+        affiliateCommGroup.DealName = "Updated Group";
         affiliateCommGroup.TargetCountryCode = "UK";
 
         // Assert
         affiliateCommGroup.AffCode.Should().Be("UPDATED123");
-        affiliateCommGroup.GroupName.Should().Be("Updated Group");
+        affiliateCommGroup.DealName.Should().Be("Updated Group");
         affiliateCommGroup.TargetCountryCode.Should().Be("UK");
     }
 }

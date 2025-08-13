@@ -207,7 +207,7 @@ public class HomeControllerTests
             {
                 new LanguageReference { LanguageCode = clickEvent.LanguageCode, LanguageLink = "en" }
             },
-            AffCommGroups = new[] { new AffiliateCommGroup { AffCode = "AFF", GroupName = "MarketingGroup" } },
+            AffCommGroups = new[] { new AffiliateCommGroup { AffCode = "AFF", DealName = "MarketingGroup" } },
             DomainMappings = Array.Empty<DomainMapping>()
         };
 
@@ -268,7 +268,7 @@ public class HomeControllerTests
                 new DomainMapping { AffDomain = clickEvent.AffDomain, LanguageCode = clickEvent.LanguageCode, LanguageLink = "en", RedirectDomain = "member.example", IsSSL = true }
             },
             LanguageReferences = Array.Empty<LanguageReference>(),
-            AffCommGroups = new[] { new AffiliateCommGroup { AffCode = "AFF", GroupName = "MarketingGroup" } }
+            AffCommGroups = new[] { new AffiliateCommGroup { AffCode = "AFF", DealName = "MarketingGroup" } }
         };
 
         _clickTrackingMock.Setup(x => x.GetMasterDataForValidateClicked()).ReturnsAsync(master);

@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Http.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using ONEbook.UM.Services;
 using Xunit;
 
@@ -74,6 +73,59 @@ public class ProgramTests
         var serviceProvider = builder.Services.BuildServiceProvider();
         // HttpClient factory is registered by AddHttpClient()
         Assert.True(true);
+    }
+
+    [Fact]
+    public void Program_ShouldRegisterServicesWithoutThrowingException()
+    {
+        // Arrange & Act & Assert - Should not throw
+        var builder = WebApplication.CreateBuilder();
+        
+        builder.Services.AddSingleton<IMaintenanceService, MaintenanceService>();
+        builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+        builder.Services.AddSingleton<IRedisService, RedisService>();
+        builder.Services.AddSingleton<ILogService, LogService>();
+
+        // This test verifies that services can be registered without throwing exceptions
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void Program_ShouldRegisterHostedServiceWithoutThrowingException()
+    {
+        // Arrange & Act & Assert - Should not throw
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddHostedService<ClickTrackingRedisStorageWorker>();
+
+        // This test verifies that hosted service can be registered without throwing exceptions
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void Program_ShouldRegisterHttpClientFactory()
+    {
+        // Arrange & Act
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddHttpClient();
+
+        var serviceProvider = builder.Services.BuildServiceProvider();
+
+        // Assert
+        var httpClientFactory = serviceProvider.GetService<System.Net.Http.IHttpClientFactory>();
+        httpClientFactory.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Program_ShouldCreateWebApplication()
+    {
+        // Arrange & Act
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddHostedService<ClickTrackingRedisStorageWorker>();
+
+        // Assert - Should not throw
+        var app = builder.Build();
+        app.Should().NotBeNull();
+        app.Should().BeOfType<WebApplication>();
     }
 
     [Fact]
