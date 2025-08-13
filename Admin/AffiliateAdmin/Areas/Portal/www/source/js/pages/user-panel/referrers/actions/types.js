@@ -1,2 +1,0 @@
-﻿export const SET_SELECTED_SITE_URL = 'SET_SELECTED_SITE_URL';
-export const SET_PARAM = 'SET_PARAM';

@@ -1,2 +1,0 @@
-export const SET_PAGING_OPTION = 'SET_PAGING_OPTION';
-export const TOGGLE_LOADER = 'TOGGLE_LOADER';

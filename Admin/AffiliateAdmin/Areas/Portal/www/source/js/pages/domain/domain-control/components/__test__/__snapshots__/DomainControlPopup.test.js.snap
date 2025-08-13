@@ -1,7 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`domain control - components - DomainControlPopup  render correctly with insert 1`] = `""`;
-
-exports[`domain control - components - DomainControlPopup  render correctly with not show popup 1`] = `""`;
-
-exports[`domain control - components - DomainControlPopup  render correctly with update 1`] = `""`;

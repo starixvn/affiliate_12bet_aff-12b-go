@@ -1,8 +1,0 @@
-﻿
-
-// Generated helper templates
-// Generated items
-// Fanex.Affiliate.User.Site\App_Data\SpConfig\SpName.12b-user.klprod.xml
-// Fanex.Affiliate.User.Site\App_Data\SpConfig\SpName.12b-user.uat.xml
-// Fanex.Affiliate.User.Site\App_Data\SpConfig\SpName.12b-user.local.xml
-// Fanex.Affiliate.User.Site\App_Data\SpConfig\SpName.xml

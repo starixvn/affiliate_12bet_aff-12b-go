@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Root>
-  <item Environment="DEV,LOCAL,SIT,UAT" SpName="test" Suffix="_xtest"></item>
-  
-</Root>

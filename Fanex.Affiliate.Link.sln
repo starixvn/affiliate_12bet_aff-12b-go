@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link", "Link\Fanex.Affiliate.Link\Fanex.Affiliate.Link.csproj", "{6CE25B47-449E-4282-A956-BAADC31CB372}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link", "Fanex.Affiliate.Link\Fanex.Affiliate.Link.csproj", "{6CE25B47-449E-4282-A956-BAADC31CB372}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Core", "Link\Fanex.Affiliate.Link.Core\Fanex.Affiliate.Link.Core.csproj", "{486C6ADD-E561-4200-F552-9D0FE4AA1D52}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Core", "Fanex.Affiliate.Link.Core\Fanex.Affiliate.Link.Core.csproj", "{486C6ADD-E561-4200-F552-9D0FE4AA1D52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Consumer", "Link\Fanex.Affiliate.Link.Consumer\Fanex.Affiliate.Link.Consumer.csproj", "{5D0677DF-05A3-03A4-1404-48EB64BF7A5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Consumer", "Fanex.Affiliate.Link.Consumer\Fanex.Affiliate.Link.Consumer.csproj", "{5D0677DF-05A3-03A4-1404-48EB64BF7A5E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Consumer.Tests", "Link\UnitTests\Fanex.Affiliate.Link.Consumer.Tests\Fanex.Affiliate.Link.Consumer.Tests.csproj", "{23F9BAC1-9183-99BC-7037-FC6670124F95}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Consumer.Tests", "UnitTests\Fanex.Affiliate.Link.Consumer.Tests\Fanex.Affiliate.Link.Consumer.Tests.csproj", "{23F9BAC1-9183-99BC-7037-FC6670124F95}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Core.Tests", "Link\UnitTests\Fanex.Affiliate.Link.Core.Tests\Fanex.Affiliate.Link.Core.Tests.csproj", "{97612329-7119-E440-3070-D88588012AE7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Core.Tests", "UnitTests\Fanex.Affiliate.Link.Core.Tests\Fanex.Affiliate.Link.Core.Tests.csproj", "{97612329-7119-E440-3070-D88588012AE7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Tests", "Link\UnitTests\Fanex.Affiliate.Link.Tests\Fanex.Affiliate.Link.Tests.csproj", "{5D6C350E-955D-837A-14FF-8135B2482B28}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fanex.Affiliate.Link.Tests", "UnitTests\Fanex.Affiliate.Link.Tests\Fanex.Affiliate.Link.Tests.csproj", "{5D6C350E-955D-837A-14FF-8135B2482B28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

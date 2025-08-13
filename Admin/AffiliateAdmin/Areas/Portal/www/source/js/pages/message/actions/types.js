@@ -1,5 +1,0 @@
-﻿export const SET_PARAM = 'SET_PARAM';
-export const SET_GRID_DATA = 'SET_GRID_DATA';
-export const SET_CHECKED_MESSAGES = 'SET_CHECKED_MESSAGES';
-export const SET_SELECTED_Message_id = 'SET_SELECTED_Message_id';
-export const SHOULD_RESET_SCROLL_POSITION = 'SHOULD_RESET_SCROLL_POSITION';

@@ -1,2 +1,0 @@
-﻿export const SET_ONLINE_LIST = 'SET_ONLINE_LIST';
-export const SET_GENERAL_INFO = 'SET_GENERAL_INFO';
