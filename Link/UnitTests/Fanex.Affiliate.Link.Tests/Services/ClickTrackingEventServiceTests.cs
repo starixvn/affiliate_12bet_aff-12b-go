@@ -4,9 +4,7 @@ using System.Threading.Tasks;
 using Fanex.Affiliate.Link.Commands;
 using Fanex.Affiliate.Link.Core.Models;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
-using Fanex.Affiliate.Link.Criterias;
 using Fanex.Affiliate.Link.DTOs;
-using Fanex.Affiliate.Link.Models;
 using Fanex.Affiliate.Link.Services.Impl;
 using Fanex.Affiliate.Link.Services.Interface;
 using Fanex.Data.Repository;
@@ -19,7 +17,6 @@ namespace Fanex.Affiliate.Link.Tests.Services;
 public class ClickTrackingEventServiceTests
 {
     private readonly Mock<IDynamicRepository> _mockDynamicRepository;
-    private readonly Mock<IMemoryCacheService> _mockMemoryCacheService;
     private readonly Mock<IRabbitBus> _mockRabbitBus;
     private readonly Mock<IRedisService> _mockRedisService;
     private readonly Mock<IDatabaseService> _mockDatabaseService;
@@ -29,7 +26,6 @@ public class ClickTrackingEventServiceTests
     public ClickTrackingEventServiceTests()
     {
         _mockDynamicRepository = new Mock<IDynamicRepository>();
-        _mockMemoryCacheService = new Mock<IMemoryCacheService>();
         _mockRabbitBus = new Mock<IRabbitBus>();
         _mockRedisService = new Mock<IRedisService>();
         _mockDatabaseService = new Mock<IDatabaseService>();
@@ -37,7 +33,6 @@ public class ClickTrackingEventServiceTests
 
         _service = new ClickTrackingEventService(
             _mockDynamicRepository.Object,
-            _mockMemoryCacheService.Object,
             _mockRabbitBus.Object,
             _mockRedisService.Object,
             _mockDatabaseService.Object,

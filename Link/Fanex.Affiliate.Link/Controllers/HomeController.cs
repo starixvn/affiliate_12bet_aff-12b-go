@@ -207,7 +207,7 @@
         private async Task<ValidateResult> ValidateLink(ClickTrackingEvent clickTrackingEvent)
         {
             ValidateResult validateResult;
-            if (!IsUnderMaintenance())
+            if (IsUnderMaintenance())
             {
                 try
                 {
@@ -284,6 +284,22 @@
                     IsValid = false,
                     ErrorMessage = LinkIsInvalidMessage
                 };
+            }
+            else
+            {
+                var dealIds = domain.DealIds ?? string.Empty;
+                var dealIdList = dealIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                bool isDealIdInList = dealIdList.Contains(affDeal.DealId.ToString());
+                bool isExcludedAndInList = domain.IsExcluded && isDealIdInList;
+                bool isIncludedAndNotInList = !domain.IsExcluded && !isDealIdInList;
+                if (isExcludedAndInList || isIncludedAndNotInList)
+                {
+                    return new ValidateResult
+                    {
+                        IsValid = false,
+                        ErrorMessage = LinkIsInvalidMessage
+                    };
+                }
             }
 
             // Find landing page

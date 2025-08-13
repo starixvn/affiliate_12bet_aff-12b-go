@@ -4,7 +4,6 @@
     using Fanex.Affiliate.Link.Core.Models;
     using Fanex.Affiliate.Link.DTOs;
     using Fanex.Affiliate.Link.Models;
-    using System.Collections.Generic;
 
     /// <summary>
     /// Tracking system statistics.
