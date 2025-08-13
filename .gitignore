@@ -48,3 +48,4 @@ node_modules
 Link/run-sonar.ps1
 Link/.sonarqube
 Link/UnitTests/Fanex.Affiliate.Link.Tests/coverage
+Link/coverage

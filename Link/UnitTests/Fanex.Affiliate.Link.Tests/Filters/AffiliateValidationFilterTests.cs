@@ -78,7 +78,7 @@ public class AffiliateValidationFilterTests
         var context = CreateActionExecutingContext(parameters);
 
         _mockAffInfoService.Setup(x => x.GetAffInfoByAffId(123))
-            .Returns(new DTOs.AffiliateInfo { AffId = 123, AffCode = "TEST123" });
+            .Returns(new Fanex.Affiliate.Link.DTOs.AffiliateInfo { AffId = 123, AffCode = "TEST123" });
 
         // Act
         filter.OnActionExecuting(context);
@@ -114,7 +114,7 @@ public class AffiliateValidationFilterTests
         var context = CreateActionExecutingContext(parameters);
 
         _mockAffInfoService.Setup(x => x.GetAffInfoByAffCode("TEST123"))
-            .Returns(new DTOs.AffiliateInfo { AffId = 123, AffCode = "TEST123" });
+            .Returns(new Fanex.Affiliate.Link.DTOs.AffiliateInfo { AffId = 123, AffCode = "TEST123" });
 
         // Act
         filter.OnActionExecuting(context);
@@ -133,7 +133,7 @@ public class AffiliateValidationFilterTests
         var context = CreateActionExecutingContext(parameters);
 
         _mockAffInfoService.Setup(x => x.GetAffInfoByAffId(999))
-            .Returns(new DTOs.AffiliateInfo()); // Empty affiliate info
+            .Returns(new Fanex.Affiliate.Link.DTOs.AffiliateInfo()); // Empty affiliate info
 
         // Act
         filter.OnActionExecuting(context);

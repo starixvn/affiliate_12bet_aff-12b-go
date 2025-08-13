@@ -82,3 +82,4 @@ public class LinkParamsTests
         linkParams.Channel.Should().Be("mobile");
     }
 }
+

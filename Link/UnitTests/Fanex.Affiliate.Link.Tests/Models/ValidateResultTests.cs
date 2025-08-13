@@ -95,3 +95,4 @@ public class ValidateResultTests
         validateResult.IsAffMarketing.Should().BeFalse();
     }
 }
+

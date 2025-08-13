@@ -98,3 +98,4 @@ public class BaseNonQueryCommandTests
         command.ErrMsg.Should().Be("Updated error message");
     }
 }
+
