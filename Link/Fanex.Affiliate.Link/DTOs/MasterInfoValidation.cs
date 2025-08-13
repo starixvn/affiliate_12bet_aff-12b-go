@@ -8,7 +8,7 @@ public class MasterInfoValidation
 
     public IEnumerable<LanguageReference> LanguageReferences { get; set; }
 
-    public IEnumerable<AffiliateCommGroup> AffCommGroups { get; set; }
+    public IEnumerable<AffiliateDeal> AffiliateDeals { get; set; }
 
     public IEnumerable<LandingPageSetting> LandingPages { get; set; }
 }

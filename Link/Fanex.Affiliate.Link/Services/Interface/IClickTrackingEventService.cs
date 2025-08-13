@@ -18,14 +18,6 @@
         /// <returns>Success or fail.</returns>
         Task<string> InsertStatistic(TrackingSystemCommand command);
 
-        Task<CheckMarketingLinkResult> GetTrackingMarketingLinkInfo(CheckMarketingLinkCommand command);
-
-        Task<bool> ToggleMarketingLink(ToggleMarketingLinkCommand command);
-
-        Task<IEnumerable<MarketInfo>> GetMarkets();
-
-        Task<MarketInfo> GetMarketInfo(string lang);
-
         Task<ValidateResult> ValidateLinkFromDatabase(ClickTrackingEvent clickTrackingEvent);
 
         Task<MasterInfoValidation> GetMasterDataForValidateClicked();

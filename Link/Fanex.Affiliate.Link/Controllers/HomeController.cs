@@ -1,7 +1,11 @@
 ﻿namespace Fanex.Affiliate.Link.Controllers
 {
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
     using Fanex.Affiliate.Link.Constants;
     using Fanex.Affiliate.Link.Core.Models;
+    using Fanex.Affiliate.Link.Core.Services.Interfaces;
     using Fanex.Affiliate.Link.DTOs;
     using Fanex.Affiliate.Link.Extensions;
     using Fanex.Affiliate.Link.Models;
@@ -9,25 +13,19 @@
     using Microsoft.AspNetCore.Mvc;
     using ONEbook.UM.Services;
     using Services.Interface;
-    using System;
-    using System.Text.RegularExpressions;
-    using System.Threading.Tasks;
-    using System.Linq;
 
     /// <summary>
     /// Home controller for affiliate link.
     /// </summary>
     public class HomeController : Controller
     {
-        private readonly string[] marketingForCommGroups;
-        private readonly string[] marketingPageCodeRegexPatterns;
         private readonly bool isRemovePortFromUrl;
 
         private readonly IClickTrackingEventService trackingSystemService;
-        private readonly IAffInfoService affInfoService;
         private readonly IConfiguration configuration;
         private readonly IMaintenanceService maintenanceService;
         private readonly IHttpContextService httpContextService;
+        private readonly ILogService logService;
         private const string LinkIsInvalidMessage = "Oops! This link does not exist. Please reach out to the administrator if you need help.";
         private const string LinkIsIncorrectMessage = "Oops! This link is in an incorrect format. Please reach out to the administrator for assistance.";
         private const string LinkIsOutdatedMessage = "Oops! This link is using an outdated format. Please contact the administrator to get it updated.";
@@ -37,20 +35,16 @@
 
         public HomeController(
             IClickTrackingEventService trackingSystemService,
-            IAffInfoService affInfoService,
             IMaintenanceService maintenanceService,
             IConfiguration configuration,
-            IHttpContextService httpContextService)
+            IHttpContextService httpContextService,
+            ILogService logService)
         {
             this.trackingSystemService = trackingSystemService;
-            this.affInfoService = affInfoService;
             this.configuration = configuration;
             this.maintenanceService = maintenanceService;
             this.httpContextService = httpContextService;
-            marketingForCommGroups = (this.configuration["AppSettings:MarketingForCommGroups"] ?? string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries);
-            marketingPageCodeRegexPatterns = (this.configuration["AppSettings:MarketingPageCodeRegexPatterns"] ?? string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries);
+            this.logService = logService;
             isRemovePortFromUrl = this.configuration["AppSettings:RemovePortFromUrl"].MatchWith("1");
         }
 
@@ -73,7 +67,7 @@
             }
             catch (Exception ex)
             {
-                LogHelper.WriteError(ex);
+                await logService.SentryErrorAsync(ex).ConfigureAwait(false);
                 return StatusCode(HttpStatusInternalServerError, $"An error occurred while syncing max click id: {ex.Message}");
             }
         }
@@ -116,7 +110,7 @@
                 var validateResult = await ValidateLink(clickTrackingEvent).ConfigureAwait(false);
                 if (validateResult.IsValid)
                 {
-                    clickTrackingEvent.RedirectLink = validateResult.RedirectView;
+                    clickTrackingEvent.RedirectLink = validateResult.RedirectLink;
                     return await ProcessLink(clickTrackingEvent).ConfigureAwait(false);
                 }
 
@@ -213,31 +207,34 @@
         private async Task<ValidateResult> ValidateLink(ClickTrackingEvent clickTrackingEvent)
         {
             ValidateResult validateResult;
-            if (IsUnderMaintenance())
+            if (!IsUnderMaintenance())
             {
-                validateResult = await ValidateLinkFromCache(clickTrackingEvent).ConfigureAwait(false);
+                try
+                {
+                    validateResult = await ValidateLinkFromCache(clickTrackingEvent).ConfigureAwait(false);
+                }
+                catch(Exception ex) 
+                {
+                    await logService.SentryErrorAsync(ex).ConfigureAwait(false);
+                    validateResult = await trackingSystemService.ValidateLinkFromDatabase(clickTrackingEvent).ConfigureAwait(false);
+                }
             }
             else
             {
-                validateResult = await trackingSystemService.ValidateLinkFromDatabase(clickTrackingEvent).ConfigureAwait(false);
-                if (validateResult.IsValid)
+                try
                 {
-                    validateResult.IsAffMarketing = IsValidAffMarketing(clickTrackingEvent.AffCode);
+                    validateResult = await trackingSystemService.ValidateLinkFromDatabase(clickTrackingEvent).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    await logService.SentryErrorAsync(ex).ConfigureAwait(false);
+                    validateResult = await ValidateLinkFromCache(clickTrackingEvent).ConfigureAwait(false);
                 }
             }
 
             if (validateResult.IsValid)
             {
-                bool isMarketingLandingPage = marketingPageCodeRegexPatterns.ToList().Exists(
-                    reg => RegexHelper.IsMatch(clickTrackingEvent.PageCode, reg, RegexOptions.IgnoreCase));
-
-                string mappingPageCode = clickTrackingEvent.PageCode;
-                if (isMarketingLandingPage)
-                {
-                    mappingPageCode = validateResult.IsAffMarketing ? clickTrackingEvent.PageCode : LandingPage.JOIN_PAGE_CODE;
-                }
-
-                validateResult.RedirectView = HandleRedirectLink(validateResult.RedirectView, clickTrackingEvent.PageCode, clickTrackingEvent.LanguageCode, mappingPageCode);
+                validateResult.RedirectLink = HandleRedirectLink(validateResult.RedirectLink, clickTrackingEvent.PageCode, clickTrackingEvent.LanguageCode);
             }
 
             return validateResult;
@@ -257,35 +254,95 @@
                 validateResult = ValidateLinkDomain(clickTrackingEvent, masterInfoValidation);
             }
 
-            if (validateResult.IsValid)
-            {
-                var commGroup = masterInfoValidation.AffCommGroups.FirstOrDefault(m => m.AffCode == clickTrackingEvent.AffCode);
-                if (commGroup != null)
-                {
-                    validateResult.IsAffMarketing = marketingForCommGroups.ToList().Exists(c => c.MatchWith(commGroup.DealName));
-                }
-            }
-
             return validateResult;
         }
 
         private ValidateResult ValidateLinkDomain(ClickTrackingEvent clickTrackingEvent, MasterInfoValidation masterInfoValidation)
         {
-            var affCommGroup = masterInfoValidation.AffCommGroups.FirstOrDefault(m => m.AffCode == clickTrackingEvent.AffCode);
-            if (affCommGroup == null)
+            // Find affiliate deal
+            var affDeal = masterInfoValidation.AffiliateDeals
+                .FirstOrDefault(m => m.AffCode == clickTrackingEvent.AffCode);
+
+            if (affDeal == null)
             {
-                return new ValidateResult { IsValid = false, ErrorMessage = LinkIsInvalidMessage };
+                return new ValidateResult
+                {
+                    IsValid = false,
+                    ErrorMessage = LinkIsInvalidMessage
+                };
             }
 
-            var domain = masterInfoValidation.DomainMappings.FirstOrDefault(m => m.AffDomain == clickTrackingEvent.AffDomain
-                                    && m.LanguageCode == clickTrackingEvent.LanguageCode);
+            // Find domain mapping
+            var domain = masterInfoValidation.DomainMappings
+                .FirstOrDefault(m => m.AffDomain == clickTrackingEvent.AffDomain
+                                  && m.LanguageCode == clickTrackingEvent.LanguageCode);
+
             if (domain == null)
             {
-                return new ValidateResult { IsValid = false, ErrorMessage = LinkIsInvalidMessage };
+                return new ValidateResult
+                {
+                    IsValid = false,
+                    ErrorMessage = LinkIsInvalidMessage
+                };
             }
 
-            var licenseeDomain = $"{(domain.IsSSL ? "https" : "http")}://{domain.RedirectDomain}/{domain.LanguageLink}/{clickTrackingEvent.PageCode}?affCode={affCommGroup.AffCode}";
-            return new ValidateResult { IsValid = true, RedirectView = licenseeDomain };
+            // Find landing page
+            var landingPage = masterInfoValidation.LandingPages
+                .FirstOrDefault(m => m.PageCode == clickTrackingEvent.PageCode);
+
+            string landingPageCode = GetLandingPageCode(landingPage, masterInfoValidation, affDeal, domain, clickTrackingEvent.PageCode);
+
+            if (string.IsNullOrEmpty(landingPageCode))
+            {
+                return new ValidateResult
+                {
+                    IsValid = false,
+                    ErrorMessage = LinkIsInvalidMessage
+                };
+            }
+
+            var protocol = domain.IsSSL ? "https" : "http";
+            var licenseeDomain = $"{protocol}://{domain.RedirectDomain}/{domain.LanguageLink}/{landingPageCode}?affCode={affDeal.AffCode}";
+
+            return new ValidateResult
+            {
+                IsValid = true,
+                RedirectLink = licenseeDomain
+            };
+        }
+
+        private static string GetLandingPageCode(
+            LandingPageSetting landingPage,
+            MasterInfoValidation masterInfoValidation,
+            AffiliateDeal affDeal,
+            DomainMapping domain,
+            string requestedPageCode)
+        {
+            // If landing page is not found, fallback to default
+            if (landingPage == null)
+            {
+                var defaultLandingPage = masterInfoValidation.LandingPages.FirstOrDefault(m => m.IsDefault);
+                return defaultLandingPage?.PageCode;
+            }
+
+            // Defensive: ensure DealIds is not null or whitespace
+            var dealIds = landingPage.DealIds ?? string.Empty;
+            var dealIdList = dealIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+            bool isDealIdInList = dealIdList.Contains(affDeal.DealId.ToString());
+
+            // Exclusion/inclusion and mobile check
+            bool isExcludedAndInList = landingPage.IsExcluded && isDealIdInList;
+            bool isIncludedAndNotInList = !landingPage.IsExcluded && !isDealIdInList;
+            bool isMobileMismatch = landingPage.IsMobile != domain.IsMobile;
+
+            if (isExcludedAndInList || isIncludedAndNotInList || isMobileMismatch)
+            {
+                var defaultLandingPage = masterInfoValidation.LandingPages.FirstOrDefault(m => m.IsDefault);
+                return defaultLandingPage?.PageCode;
+            }
+
+            return requestedPageCode;
         }
 
         private ValidateResult ValidateLinkSpecialDomain(ClickTrackingEvent clickTrackingEvent, MasterInfoValidation masterInfoValidation)
@@ -299,7 +356,7 @@
 
             var languageLink = masterInfoValidation.LanguageReferences.FirstOrDefault(m => m.LanguageCode == clickTrackingEvent.LanguageCode);
             var specialDomain = $"{(domain.IsSSL ? "https" : "http")}://{domain.RedirectDomain}/{languageLink.LanguageLink}/{clickTrackingEvent.PageCode}?affCode={domain.AffCode}";
-            return new ValidateResult { IsValid = true, RedirectView = specialDomain };
+            return new ValidateResult { IsValid = true, RedirectLink = specialDomain };
         }
 
         private static string GetSupportedPageCodeOnV2(string pageCode)
@@ -314,12 +371,6 @@
             return LandingPage.SupportedPageCodeOnV1.TryGetValue(pageCodeLower, out string pageCodeOnV2)
                 ? pageCodeOnV2
                 : pageCodeLower;
-        }
-
-        private bool IsValidAffMarketing(string affCode)
-        {
-            var commGroup = affInfoService.GetCommGroupByAffCode(affCode);
-            return commGroup != null && marketingForCommGroups.ToList().Exists(c => c.MatchWith(commGroup.GroupName));
         }
 
         private string GetFullAffDomain(string urlWithoutProtocol, string endPointOfAffDomain)
@@ -370,7 +421,7 @@
                 : languageCode;
         }
 
-        private string HandleRedirectLink(string redirectLink, string pageCode, string languageCode, string mappingPageCode)
+        private string HandleRedirectLink(string redirectLink, string pageCode, string languageCode)
         {
             if (string.IsNullOrEmpty(redirectLink) || string.IsNullOrEmpty(pageCode) || string.IsNullOrEmpty(languageCode))
             {
@@ -388,11 +439,10 @@
 
             if (languageCode.MatchWith(Language.BENGALI_SHORTED_CODE))
             {
-                return redirectLink.ReplaceStr($"/{pageCode}", $"/{mappingPageCode}").ReplaceStr($"/bn/", $"/bd/");
+                return redirectLink.ReplaceStr($"/bn/", $"/bd/");
             }
 
             return redirectLink
-                .ReplaceStr($"/{pageCode}", $"/{mappingPageCode}")
                 .ReplaceStr($"/{languageCode}/", $"/{customLanguageCode}/");
         }
 

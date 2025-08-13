@@ -9,4 +9,6 @@ public class LandingPageSetting
     public bool IsExcluded { get; set; }
 
     public string DealIds { get; set; }
+
+    public bool IsDefault { get; set; }
 }

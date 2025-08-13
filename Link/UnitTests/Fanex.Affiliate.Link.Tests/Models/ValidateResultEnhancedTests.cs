@@ -16,7 +16,7 @@ public class ValidateResultEnhancedTests
         validateResult.Should().NotBeNull();
         validateResult.IsValid.Should().BeFalse();
         validateResult.ErrorMessage.Should().BeNull();
-        validateResult.RedirectView.Should().BeNull();
+        validateResult.RedirectLink.Should().BeNull();
         validateResult.IsAffMarketing.Should().BeFalse();
     }
 
@@ -31,13 +31,13 @@ public class ValidateResultEnhancedTests
         // Act
         validateResult.IsValid = true;
         validateResult.ErrorMessage = errorMessage;
-        validateResult.RedirectView = redirectView;
+        validateResult.RedirectLink = redirectView;
         validateResult.IsAffMarketing = true;
 
         // Assert
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().Be(errorMessage);
-        validateResult.RedirectView.Should().Be(redirectView);
+        validateResult.RedirectLink.Should().Be(redirectView);
         validateResult.IsAffMarketing.Should().BeTrue();
     }
 
@@ -53,14 +53,14 @@ public class ValidateResultEnhancedTests
         {
             IsValid = isValid,
             ErrorMessage = errorMessage,
-            RedirectView = redirectView,
+            RedirectLink = redirectView,
             IsAffMarketing = isAffMarketing
         };
 
         // Assert
         validateResult.IsValid.Should().Be(isValid);
         validateResult.ErrorMessage.Should().Be(errorMessage);
-        validateResult.RedirectView.Should().Be(redirectView);
+        validateResult.RedirectLink.Should().Be(redirectView);
         validateResult.IsAffMarketing.Should().Be(isAffMarketing);
     }
 
@@ -72,14 +72,14 @@ public class ValidateResultEnhancedTests
         {
             IsValid = true,
             ErrorMessage = "All good",
-            RedirectView = "Link",
+            RedirectLink = "Link",
             IsAffMarketing = false
         };
 
         // Assert
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().Be("All good");
-        validateResult.RedirectView.Should().Be("Link");
+        validateResult.RedirectLink.Should().Be("Link");
         validateResult.IsAffMarketing.Should().BeFalse();
     }
 
@@ -98,8 +98,8 @@ public class ValidateResultEnhancedTests
         validateResult.ErrorMessage.Should().Be("test error");
         validateResult.IsValid.Should().BeTrue();
         
-        validateResult.RedirectView = "test view";
-        validateResult.RedirectView.Should().Be("test view");
+        validateResult.RedirectLink = "test view";
+        validateResult.RedirectLink.Should().Be("test view");
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().Be("test error");
         
@@ -107,7 +107,7 @@ public class ValidateResultEnhancedTests
         validateResult.IsAffMarketing.Should().BeTrue();
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().Be("test error");
-        validateResult.RedirectView.Should().Be("test view");
+        validateResult.RedirectLink.Should().Be("test view");
     }
 
     [Fact]
@@ -117,13 +117,13 @@ public class ValidateResultEnhancedTests
         var validateResult = new ValidateResult
         {
             IsValid = true,
-            RedirectView = "Link"
+            RedirectLink = "Link"
         };
 
         // Assert
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().BeNull();
-        validateResult.RedirectView.Should().Be("Link");
+        validateResult.RedirectLink.Should().Be("Link");
         validateResult.IsAffMarketing.Should().BeFalse();
     }
 
@@ -135,13 +135,13 @@ public class ValidateResultEnhancedTests
         {
             IsValid = false,
             ErrorMessage = "Invalid affiliate code",
-            RedirectView = "Error"
+            RedirectLink = "Error"
         };
 
         // Assert
         validateResult.IsValid.Should().BeFalse();
         validateResult.ErrorMessage.Should().Be("Invalid affiliate code");
-        validateResult.RedirectView.Should().Be("Error");
+        validateResult.RedirectLink.Should().Be("Error");
         validateResult.IsAffMarketing.Should().BeFalse();
     }
 
@@ -153,13 +153,13 @@ public class ValidateResultEnhancedTests
         {
             IsValid = true,
             IsAffMarketing = true,
-            RedirectView = "Marketing"
+            RedirectLink = "Marketing"
         };
 
         // Assert
         validateResult.IsValid.Should().BeTrue();
         validateResult.IsAffMarketing.Should().BeTrue();
-        validateResult.RedirectView.Should().Be("Marketing");
+        validateResult.RedirectLink.Should().Be("Marketing");
         validateResult.ErrorMessage.Should().BeNull();
     }
 }

@@ -14,14 +14,14 @@ public class ValidateResultTests
         {
             IsValid = true,
             ErrorMessage = "Success",
-            RedirectView = "https://example.com",
+            RedirectLink = "https://example.com",
             IsAffMarketing = true
         };
 
         // Assert
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().Be("Success");
-        validateResult.RedirectView.Should().Be("https://example.com");
+        validateResult.RedirectLink.Should().Be("https://example.com");
         validateResult.IsAffMarketing.Should().BeTrue();
     }
 
@@ -33,14 +33,14 @@ public class ValidateResultTests
         {
             IsValid = false,
             ErrorMessage = "Invalid link",
-            RedirectView = null,
+            RedirectLink = null,
             IsAffMarketing = false
         };
 
         // Assert
         validateResult.IsValid.Should().BeFalse();
         validateResult.ErrorMessage.Should().Be("Invalid link");
-        validateResult.RedirectView.Should().BeNull();
+        validateResult.RedirectLink.Should().BeNull();
         validateResult.IsAffMarketing.Should().BeFalse();
     }
 
@@ -52,14 +52,14 @@ public class ValidateResultTests
         {
             IsValid = false,
             ErrorMessage = null,
-            RedirectView = null,
+            RedirectLink = null,
             IsAffMarketing = false
         };
 
         // Assert
         validateResult.IsValid.Should().BeFalse();
         validateResult.ErrorMessage.Should().BeNull();
-        validateResult.RedirectView.Should().BeNull();
+        validateResult.RedirectLink.Should().BeNull();
         validateResult.IsAffMarketing.Should().BeFalse();
     }
 
@@ -72,13 +72,13 @@ public class ValidateResultTests
         // Act
         validateResult.IsValid = true;
         validateResult.ErrorMessage = "Updated message";
-        validateResult.RedirectView = "https://updated.com";
+        validateResult.RedirectLink = "https://updated.com";
         validateResult.IsAffMarketing = true;
 
         // Assert
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().Be("Updated message");
-        validateResult.RedirectView.Should().Be("https://updated.com");
+        validateResult.RedirectLink.Should().Be("https://updated.com");
         validateResult.IsAffMarketing.Should().BeTrue();
     }
 
@@ -91,7 +91,7 @@ public class ValidateResultTests
         // Assert
         validateResult.IsValid.Should().BeFalse();
         validateResult.ErrorMessage.Should().BeNull();
-        validateResult.RedirectView.Should().BeNull();
+        validateResult.RedirectLink.Should().BeNull();
         validateResult.IsAffMarketing.Should().BeFalse();
     }
 }

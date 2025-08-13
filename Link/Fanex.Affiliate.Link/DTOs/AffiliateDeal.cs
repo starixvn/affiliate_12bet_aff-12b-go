@@ -1,6 +1,6 @@
 ﻿namespace Fanex.Affiliate.Link.DTOs
 {
-    public class AffiliateCommGroup
+    public class AffiliateDeal
     {
         public string AffCode { get; set; }
 

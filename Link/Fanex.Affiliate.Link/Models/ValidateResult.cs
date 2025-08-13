@@ -6,7 +6,7 @@ public class ValidateResult
 
     public string ErrorMessage { get; set; }
 
-    public string RedirectView { get; set; }
+    public string RedirectLink { get; set; }
 
     public bool IsAffMarketing { get; set; }
 }

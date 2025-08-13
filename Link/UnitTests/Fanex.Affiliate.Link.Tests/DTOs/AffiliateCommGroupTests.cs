@@ -10,7 +10,7 @@ public class AffiliateCommGroupTests
     public void AffiliateCommGroup_ShouldSetPropertiesCorrectly()
     {
         // Arrange
-        var affiliateCommGroup = new AffiliateCommGroup
+        var affiliateCommGroup = new AffiliateDeal
         {
             AffCode = "TEST123",
             DealName = "Test Group",
@@ -27,7 +27,7 @@ public class AffiliateCommGroupTests
     public void AffiliateCommGroup_ShouldHandleDefaultValues()
     {
         // Arrange
-        var affiliateCommGroup = new AffiliateCommGroup();
+        var affiliateCommGroup = new AffiliateDeal();
 
         // Assert
         affiliateCommGroup.AffCode.Should().BeNull();
@@ -39,7 +39,7 @@ public class AffiliateCommGroupTests
     public void AffiliateCommGroup_ShouldBeMutable()
     {
         // Arrange
-        var affiliateCommGroup = new AffiliateCommGroup();
+        var affiliateCommGroup = new AffiliateDeal();
 
         // Act
         affiliateCommGroup.AffCode = "UPDATED123";
