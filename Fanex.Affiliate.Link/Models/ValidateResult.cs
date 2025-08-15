@@ -9,4 +9,6 @@ public class ValidateResult
     public string RedirectLink { get; set; }
 
     public bool IsAffMarketing { get; set; }
+
+    public string PageCode { get; set; }
 }

@@ -40,11 +40,11 @@
             IHttpContextService httpContextService,
             ILogService logService)
         {
-            this.trackingSystemService = trackingSystemService;
-            this.configuration = configuration;
-            this.maintenanceService = maintenanceService;
-            this.httpContextService = httpContextService;
-            this.logService = logService;
+            this.trackingSystemService = trackingSystemService ?? throw new ArgumentNullException(nameof(trackingSystemService));
+            this.maintenanceService = maintenanceService ?? throw new ArgumentNullException(nameof(maintenanceService));
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            this.httpContextService = httpContextService ?? throw new ArgumentNullException(nameof(httpContextService));
+            this.logService = logService ?? throw new ArgumentNullException(nameof(logService));
             isRemovePortFromUrl = this.configuration["AppSettings:RemovePortFromUrl"].MatchWith("1");
         }
 
@@ -111,6 +111,7 @@
                 if (validateResult.IsValid)
                 {
                     clickTrackingEvent.RedirectLink = validateResult.RedirectLink;
+                    clickTrackingEvent.PageCode = validateResult.PageCode;
                     return await ProcessLink(clickTrackingEvent).ConfigureAwait(false);
                 }
 
@@ -119,7 +120,7 @@
             }
             catch (Exception ex)
             {
-                LogHelper.WriteError(ex);
+                _ = logService.SentryErrorAsync(ex).ConfigureAwait(false);
                 ViewBag.Result = LinkIsIncorrectMessage;
                 return View("Link");
             }
@@ -311,6 +312,10 @@
                     IsValid = false,
                     ErrorMessage = LinkIsInvalidMessage
                 };
+            }
+            else
+            {
+                clickTrackingEvent.PageCode = landingPageCode;
             }
 
             var protocol = domain.IsSSL ? "https" : "http";

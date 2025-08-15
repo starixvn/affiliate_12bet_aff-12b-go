@@ -43,7 +43,9 @@
                 IsValid = command.ErrCode == 0,
                 ErrorMessage = command.ErrMsg,
                 RedirectLink = command.RedirectPage,
+                PageCode = command.PageCode
             };
+
             return validateResult;
         }
 

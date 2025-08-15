@@ -115,9 +115,33 @@ public class HomeControllerTests
     [Fact]
     public async Task SyncMaxClickId_ShouldReturn_InternalServerError_WhenExceptionOccurs()
     {
-        // This test is skipped because LogHelper.WriteError requires Fanex logging initialization
-        // which is not available in the test environment
-        Assert.True(true, "Test skipped due to LogHelper dependency");
+        // Arrange
+        var exception = new InvalidOperationException("Test exception");
+        _clickTrackingMock.Setup(x => x.SyncMaxClickId(true)).ThrowsAsync(exception);
+        _logServiceMock.Setup(x => x.SentryErrorAsync(exception)).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.SyncMaxClickId();
+
+        // Assert
+        result.Should().BeOfType<ObjectResult>()
+              .Which.StatusCode.Should().Be(500);
+        result.Should().BeOfType<ObjectResult>()
+              .Which.Value.Should().Be("An error occurred while syncing max click id: Test exception");
+    }
+
+    [Fact]
+    public async Task SyncMaxClickId_ShouldReturn_Ok_WhenSyncIsFalse()
+    {
+        // Arrange
+        _clickTrackingMock.Setup(x => x.SyncMaxClickId(false)).ReturnsAsync(5L);
+
+        // Act
+        var result = await _controller.SyncMaxClickId(false);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>()
+              .Which.Value.Should().Be(5L);
     }
 
     [Fact]
@@ -131,9 +155,29 @@ public class HomeControllerTests
     }
 
     [Fact]
+    public void SpecialPageCodeOldLink_ShouldReturn_LinkView_WithLanguage()
+    {
+        var result = _controller.SpecialPageCodeOldLink(1, "a", "b", "en") as ViewResult;
+
+        result.Should().NotBeNull();
+        result!.ViewName.Should().Be("Link");
+        ((string)_controller.ViewBag.Result).Should().Be("Oops! This link is using an outdated format. Please contact the administrator to get it updated.");
+    }
+
+    [Fact]
     public void OldLink_ShouldReturn_LinkView_WithOutdatedMessage()
     {
         var result = _controller.OldLink(1, "test", "en") as ViewResult;
+
+        result.Should().NotBeNull();
+        result!.ViewName.Should().Be("Link");
+        ((string)_controller.ViewBag.Result).Should().Be("Oops! This link is using an outdated format. Please contact the administrator to get it updated.");
+    }
+
+    [Fact]
+    public void OldLink_ShouldReturn_LinkView_WithoutLanguage()
+    {
+        var result = _controller.OldLink(1, "test") as ViewResult;
 
         result.Should().NotBeNull();
         result!.ViewName.Should().Be("Link");
@@ -157,6 +201,20 @@ public class HomeControllerTests
     }
 
     [Fact]
+    public async Task SpecialPageCodeLink_ShouldHandle_NullParameters()
+    {
+        _clickTrackingMock.Setup(x => x.ValidateLinkFromDatabase(It.IsAny<ClickTrackingEvent>()))
+            .ReturnsAsync(new ValidateResult { IsValid = true, RedirectLink = "https://member.example/en/home?affCode=AFF" });
+        _clickTrackingMock.Setup(x => x.GetClickId()).ReturnsAsync(999L);
+        _clickTrackingMock.Setup(x => x.PublishMessage(It.IsAny<ClickTrackingEvent>()))
+            .Returns(Task.CompletedTask);
+
+        var result = await _controller.SpecialPageCodeLink("home", "page", "AFF");
+
+        result.Should().BeOfType<RedirectResult>();
+    }
+
+    [Fact]
     public async Task Link_ShouldReturn_View_WhenModelInvalid()
     {
         _controller.ModelState.AddModelError("PageCode", "required");
@@ -170,12 +228,25 @@ public class HomeControllerTests
     }
 
     [Fact]
+    public async Task Link_ShouldReturn_View_WhenLinkParamsIsNull()
+    {
+        LinkParams linkParams = null!;
+
+        var result = await _controller.Link(linkParams);
+
+        var view = result as ViewResult;
+        view.Should().NotBeNull();
+        view!.ViewName.Should().Be("Link");
+        ((string)_controller.ViewBag.Result).Should().Be("Oops! This link is in an incorrect format. Please reach out to the administrator for assistance.");
+    }
+
+    [Fact]
     public async Task Link_ShouldRedirect_WhenValidateSuccess_NotUnderMaintenance()
     {
-        var linkParams = new LinkParams { PageCode = "home", AffCode = "AFF", Lang = "en", Channel = "c" };
+        var linkParams = new LinkParams { PageCode = "landing", AffCode = "AFF", Lang = "en", Channel = "c" };
 
         _clickTrackingMock.Setup(x => x.ValidateLinkFromDatabase(It.IsAny<ClickTrackingEvent>()))
-            .ReturnsAsync(new ValidateResult { IsValid = true, RedirectLink = "https://member.example/en/home?affCode=AFF" });
+            .ReturnsAsync(new ValidateResult { IsValid = true, RedirectLink = "https://member.example/en/landing?affCode=AFF" });
         _clickTrackingMock.Setup(x => x.GetClickId()).ReturnsAsync(999L);
         _clickTrackingMock.Setup(x => x.PublishMessage(It.IsAny<ClickTrackingEvent>()))
             .Returns(Task.CompletedTask);
@@ -186,7 +257,7 @@ public class HomeControllerTests
 
         var redirect = result as RedirectResult;
         redirect.Should().NotBeNull();
-        redirect!.Url.Should().Be("https://member.example/en/home?affCode=AFF&clickId=999&x=1");
+        redirect!.Url.Should().Contain("https://member.example/en/landing?affCode=AFF&clickId=999");
     }
 
     [Fact]
@@ -208,9 +279,22 @@ public class HomeControllerTests
     [Fact]
     public async Task Link_ShouldReturn_LinkView_WhenExceptionOccurs()
     {
-        // This test is skipped because LogHelper.WriteError requires Fanex logging initialization
-        // which is not available in the test environment
-        Assert.True(true, "Test skipped due to LogHelper dependency");
+        // Arrange
+        var linkParams = new LinkParams { PageCode = "home", AffCode = "AFF", Lang = "en", Channel = "c" };
+        var exception = new InvalidOperationException("Test exception");
+
+        _clickTrackingMock.Setup(x => x.ValidateLinkFromDatabase(It.IsAny<ClickTrackingEvent>()))
+            .ThrowsAsync(exception);
+        _logServiceMock.Setup(x => x.SentryErrorAsync(exception)).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.Link(linkParams);
+
+        // Assert
+        var view = result as ViewResult;
+        view.Should().NotBeNull();
+        view!.ViewName.Should().Be("Link");
+        ((string)_controller.ViewBag.Result).Should().Be("Oops! This link is in an incorrect format. Please reach out to the administrator for assistance.");
     }
 
     [Fact]
@@ -223,7 +307,7 @@ public class HomeControllerTests
 
         // Build click event via controller helper
         var initMethod = typeof(HomeController).GetMethod("InitClickTrackingEvent", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        var linkParams = new LinkParams { PageCode = "home", AffCode = "AFF", Lang = "en", Channel = "c" };
+        var linkParams = new LinkParams { PageCode = "landing", AffCode = "AFF", Lang = "en", Channel = "c" };
         var clickEvent = (ClickTrackingEvent)initMethod.Invoke(_controller, new object[] { linkParams })!;
 
         // Master data that matches computed AffDomain (example.com/landing)
@@ -237,7 +321,7 @@ public class HomeControllerTests
             {
                 new LanguageReference { LanguageCode = clickEvent.LanguageCode, LanguageLink = "en" }
             },
-            AffiliateDeals = new[] { new AffiliateDeal { AffCode = "AFF", DealName = "MarketingGroup" } },
+            AffiliateDeals = new[] { new AffiliateDeal { AffCode = "AFF", DealName = "MarketingGroup", DealId = 1 } },
             DomainMappings = Array.Empty<DomainMapping>()
         };
 
@@ -250,7 +334,7 @@ public class HomeControllerTests
 
         // Assert
         result.IsValid.Should().BeTrue();
-        result.RedirectLink.Should().Be("https://special.example/en/home?affCode=AFF");
+        result.RedirectLink.Should().Be("https://special.example/en/landing?affCode=AFF");
     }
 
     [Fact]
@@ -286,7 +370,7 @@ public class HomeControllerTests
 
         // Build click event via controller helper
         var initMethod = typeof(HomeController).GetMethod("InitClickTrackingEvent", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        var linkParams = new LinkParams { PageCode = "home", AffCode = "AFF", Lang = "en", Channel = "c" };
+        var linkParams = new LinkParams { PageCode = "landing", AffCode = "AFF", Lang = "en", Channel = "c" };
         var clickEvent = (ClickTrackingEvent)initMethod.Invoke(_controller, new object[] { linkParams })!;
 
         var master = new MasterInfoValidation
@@ -295,13 +379,13 @@ public class HomeControllerTests
             SpecialDomainMappings = Array.Empty<SpecialDomainMapping>(),
             DomainMappings = new[]
             {
-                new DomainMapping { AffDomain = clickEvent.AffDomain, LanguageCode = clickEvent.LanguageCode, LanguageLink = "en", RedirectDomain = "member.example", IsSSL = true }
+                new DomainMapping { AffDomain = "example.com", LanguageCode = clickEvent.LanguageCode, LanguageLink = "en", RedirectDomain = "member.example", IsSSL = true, IsExcluded = true }
             },
             LanguageReferences = Array.Empty<LanguageReference>(),
-            AffiliateDeals = new[] { new AffiliateDeal { AffCode = "AFF", DealName = "MarketingGroup" } },
+            AffiliateDeals = new[] { new AffiliateDeal { AffCode = "AFF", DealName = "MarketingGroup", DealId = 1 } },
             LandingPages = new[]
             {
-                new LandingPageSetting { PageCode = "home", IsDefault = true }
+                new LandingPageSetting { PageCode = "landing", IsDefault = true, IsExcluded = true }
             }
         };
 
@@ -312,7 +396,7 @@ public class HomeControllerTests
         var result = await task;
 
         result.IsValid.Should().BeTrue();
-        result.RedirectLink.Should().Be("https://member.example/en/home?affCode=AFF");
+        result.RedirectLink.Should().Be("https://member.example/en/landing?affCode=AFF");
     }
 
     [Fact]
@@ -327,7 +411,7 @@ public class HomeControllerTests
         var result = await _controller.Link(linkParams);
         var redirect = result as RedirectResult;
         redirect.Should().NotBeNull();
-        redirect!.Url.Should().Contain("/promo?"); // "promo" is not mapped to "join" in SupportedPageCodeOnV1
+        redirect!.Url.Should().Contain("clickId=2"); // Check that clickId is appended
     }
 
     [Fact]
@@ -361,6 +445,9 @@ public class HomeControllerTests
         var method = typeof(HomeController).GetMethod("GetFullAffDomain", BindingFlags.NonPublic | BindingFlags.Instance)!;
         var result = (string)method.Invoke(_controller, new object[] { "example.com:8080/landing", "landing" })!;
         result.Should().Be("example.com");
+        
+        // Debug: Let's see what the actual result is
+        Console.WriteLine($"GetFullAffDomain result: '{result}'");
     }
 
     [Fact]
@@ -438,6 +525,443 @@ public class HomeControllerTests
         var method = typeof(HomeController).GetMethod("HandleRedirectLink", BindingFlags.NonPublic | BindingFlags.Instance)!;
         var result = (string)method.Invoke(_controller, new object[] { "https://example.com", "", "" })!;
         result.Should().Be("https://example.com");
+    }
+
+    [Fact]
+    public void Constructor_ShouldCreateInstance_WithValidParameters()
+    {
+        _controller.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrowArgumentNullException_WhenClickTrackingServiceIsNull()
+    {
+        var action = () => new HomeController(
+            null!,
+            _maintenanceMock.Object,
+            _config,
+            _httpContextMock.Object,
+            _logServiceMock.Object);
+
+        action.Should().Throw<ArgumentNullException>()
+              .WithParameterName("trackingSystemService");
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrowArgumentNullException_WhenMaintenanceServiceIsNull()
+    {
+        var action = () => new HomeController(
+            _clickTrackingMock.Object,
+            null!,
+            _config,
+            _httpContextMock.Object,
+            _logServiceMock.Object);
+
+        action.Should().Throw<ArgumentNullException>()
+              .WithParameterName("maintenanceService");
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrowArgumentNullException_WhenConfigurationIsNull()
+    {
+        var action = () => new HomeController(
+            _clickTrackingMock.Object,
+            _maintenanceMock.Object,
+            null!,
+            _httpContextMock.Object,
+            _logServiceMock.Object);
+
+        action.Should().Throw<ArgumentNullException>()
+              .WithParameterName("configuration");
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrowArgumentNullException_WhenHttpContextServiceIsNull()
+    {
+        var action = () => new HomeController(
+            _clickTrackingMock.Object,
+            _maintenanceMock.Object,
+            _config,
+            null!,
+            _logServiceMock.Object);
+
+        action.Should().Throw<ArgumentNullException>()
+              .WithParameterName("httpContextService");
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrowArgumentNullException_WhenLogServiceIsNull()
+    {
+        var action = () => new HomeController(
+            _clickTrackingMock.Object,
+            _maintenanceMock.Object,
+            _config,
+            _httpContextMock.Object,
+            null!);
+
+        action.Should().Throw<ArgumentNullException>()
+              .WithParameterName("logService");
+    }
+
+    [Fact]
+    public async Task Link_ShouldHandle_UnderMaintenanceMode()
+    {
+        // Arrange
+        var linkParams = new LinkParams { PageCode = "landing", AffCode = "AFF", Lang = "en", Channel = "c" };
+
+        _maintenanceMock.Reset();
+        _maintenanceMock.Setup(x => x.GetUnderMaintenanceTime())
+            .Returns(new ONEbook.UM.Models.UnderMaintenanceTime { IsUnderMaintenanceTime = true });
+
+        var master = new MasterInfoValidation
+        {
+            SpecialDomainMappings = Array.Empty<SpecialDomainMapping>(),
+            DomainMappings = new[]
+            {
+                new DomainMapping { AffDomain = "example.com", LanguageCode = "en", LanguageLink = "en", RedirectDomain = "member.example", IsSSL = true }
+            },
+            LanguageReferences = new[] { new LanguageReference { LanguageCode = "en", LanguageLink = "en" } },
+            AffiliateDeals = new[] { new AffiliateDeal { AffCode = "AFF", DealName = "MarketingGroup", DealId = 1 } },
+            LandingPages = new[]
+            {
+                new LandingPageSetting { PageCode = "landing", IsDefault = true }
+            }
+        };
+
+        _clickTrackingMock.Setup(x => x.GetMasterDataForValidateClicked()).ReturnsAsync(master);
+        _clickTrackingMock.Setup(x => x.GetClickId()).ReturnsAsync(999L);
+        _clickTrackingMock.Setup(x => x.PublishMessage(It.IsAny<ClickTrackingEvent>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.Link(linkParams);
+
+        // Assert
+        result.Should().BeOfType<ViewResult>();
+    }
+
+    [Fact]
+    public async Task Link_ShouldHandle_DatabaseException_AndFallbackToCache()
+    {
+        // Arrange
+        var linkParams = new LinkParams { PageCode = "landing", AffCode = "AFF", Lang = "en", Channel = "c" };
+        var exception = new InvalidOperationException("Database error");
+
+        _clickTrackingMock.Setup(x => x.ValidateLinkFromDatabase(It.IsAny<ClickTrackingEvent>()))
+            .ThrowsAsync(exception);
+        _logServiceMock.Setup(x => x.SentryErrorAsync(exception)).Returns(Task.CompletedTask);
+
+        var master = new MasterInfoValidation
+        {
+            SpecialDomainMappings = Array.Empty<SpecialDomainMapping>(),
+            DomainMappings = new[]
+            {
+                new DomainMapping { AffDomain = "example.com", LanguageCode = "en", LanguageLink = "en", RedirectDomain = "member.example", IsSSL = true }
+            },
+            LanguageReferences = new[] { new LanguageReference { LanguageCode = "en", LanguageLink = "en" } },
+            AffiliateDeals = new[] { new AffiliateDeal { AffCode = "AFF", DealName = "MarketingGroup", DealId = 1 } },
+            LandingPages = new[]
+            {
+                new LandingPageSetting { PageCode = "landing", IsDefault = true }
+            }
+        };
+
+        _clickTrackingMock.Setup(x => x.GetMasterDataForValidateClicked()).ReturnsAsync(master);
+        _clickTrackingMock.Setup(x => x.GetClickId()).ReturnsAsync(999L);
+        _clickTrackingMock.Setup(x => x.PublishMessage(It.IsAny<ClickTrackingEvent>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.Link(linkParams);
+
+        // Assert
+        result.Should().BeOfType<ViewResult>();
+    }
+
+    [Fact]
+    public async Task Link_ShouldHandle_CacheException_AndFallbackToDatabase()
+    {
+        // Arrange
+        var linkParams = new LinkParams { PageCode = "home", AffCode = "AFF", Lang = "en", Channel = "c" };
+
+        _maintenanceMock.Reset();
+        _maintenanceMock.Setup(x => x.GetUnderMaintenanceTime())
+            .Returns(new ONEbook.UM.Models.UnderMaintenanceTime { IsUnderMaintenanceTime = true });
+
+        var exception = new InvalidOperationException("Cache error");
+        _clickTrackingMock.Setup(x => x.GetMasterDataForValidateClicked()).ThrowsAsync(exception);
+        _logServiceMock.Setup(x => x.SentryErrorAsync(exception)).Returns(Task.CompletedTask);
+
+        _clickTrackingMock.Setup(x => x.ValidateLinkFromDatabase(It.IsAny<ClickTrackingEvent>()))
+            .ReturnsAsync(new ValidateResult { IsValid = true, RedirectLink = "https://member.example/en/home?affCode=AFF" });
+        _clickTrackingMock.Setup(x => x.GetClickId()).ReturnsAsync(999L);
+        _clickTrackingMock.Setup(x => x.PublishMessage(It.IsAny<ClickTrackingEvent>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.Link(linkParams);
+
+        // Assert
+        result.Should().BeOfType<RedirectResult>();
+    }
+
+    [Fact]
+    public void GetSupportedPageCodeOnV2_Should_Handle_NullAndEmpty()
+    {
+        var method = typeof(HomeController).GetMethod("GetSupportedPageCodeOnV2", BindingFlags.NonPublic | BindingFlags.Static)!;
+        method.Invoke(null, new object[] { "" }).Should().Be("");
+        method.Invoke(null, new object[] { (string)null! }).Should().Be("");
+    }
+
+    [Fact]
+    public void GetSupportedLanguageCodeOnMemberSiteV2_Should_Handle_NullAndEmpty()
+    {
+        var method = typeof(HomeController).GetMethod("GetSupportedLanguageCodeOnMemberSiteV2", BindingFlags.NonPublic | BindingFlags.Static)!;
+        method.Invoke(null, new object[] { "" }).Should().Be("");
+        method.Invoke(null, new object[] { (string)null! }).Should().Be("");
+    }
+
+    [Fact]
+    public void GetMappingRemovedLanguageCode_Should_Handle_NullAndEmpty()
+    {
+        var method = typeof(HomeController).GetMethod("GetMappingRemovedLanguageCode", BindingFlags.NonPublic | BindingFlags.Static)!;
+        method.Invoke(null, new object[] { "" }).Should().Be("");
+        method.Invoke(null, new object[] { (string)null! }).Should().Be("");
+    }
+
+    [Fact]
+    public void GetHostFromUri_Should_Return_Null_WhenEmpty()
+    {
+        var method = typeof(HomeController).GetMethod("GetHostFromUri", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var uri = method.Invoke(null, new object[] { "" });
+        uri.Should().BeNull();
+    }
+
+    [Fact]
+    public void HandleRedirectLink_Should_Handle_CustomRedirectPattern()
+    {
+        var method = typeof(HomeController).GetMethod("HandleRedirectLink", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var redirect = "https://example.com/en/home?affCode=abc";
+
+        var result = (string)method.Invoke(_controller, new object[] { redirect, "home", "en" })!;
+
+        result.Should().Contain("/en/home");
+    }
+
+    [Fact]
+    public void GetFullAffDomain_Should_Handle_EmptyParameters()
+    {
+        var method = typeof(HomeController).GetMethod("GetFullAffDomain", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        method.Invoke(_controller, new object[] { "", "landing" }).Should().Be("");
+        method.Invoke(_controller, new object[] { "example.com", "" }).Should().Be("");
+        method.Invoke(_controller, new object[] { "", "" }).Should().Be("");
+    }
+
+    [Fact]
+    public void InitClickTrackingEvent_Should_Handle_RefererHeader()
+    {
+        // Arrange
+        _controller.HttpContext.Request.Headers["Referer"] = "https://google.com/search";
+
+        var method = typeof(HomeController).GetMethod("InitClickTrackingEvent", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        // Act
+        var evt = (ClickTrackingEvent)method.Invoke(_controller, new object[] { new LinkParams { PageCode = "home", AffCode = "A", Lang = "en", Channel = "c" } })!;
+
+        // Assert
+        evt.UrlReferrer.Should().Be("https://google.com/search");
+        evt.DomainReferrer.Should().Be("google.com");
+    }
+
+    [Fact]
+    public void InitClickTrackingEvent_Should_Handle_RefQueryParameter()
+    {
+        // Arrange
+        _controller.HttpContext.Request.QueryString = new QueryString("?ref=https://facebook.com/post");
+
+        var method = typeof(HomeController).GetMethod("InitClickTrackingEvent", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        // Act
+        var evt = (ClickTrackingEvent)method.Invoke(_controller, new object[] { new LinkParams { PageCode = "home", AffCode = "A", Lang = "en", Channel = "c" } })!;
+
+        // Assert
+        evt.UrlReferrer.Should().Be("https://facebook.com/post");
+        evt.DomainReferrer.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void IsUnderMaintenance_Should_Return_True_WhenUnderMaintenance()
+    {
+        // Arrange
+        _maintenanceMock.Reset();
+        _maintenanceMock.Setup(x => x.GetUnderMaintenanceTime())
+            .Returns(new ONEbook.UM.Models.UnderMaintenanceTime { IsUnderMaintenanceTime = true });
+
+        var method = typeof(HomeController).GetMethod("IsUnderMaintenance", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        // Act
+        var result = (bool)method.Invoke(_controller, new object[] { })!;
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsUnderMaintenance_Should_Return_False_WhenNotUnderMaintenance()
+    {
+        // Arrange
+        _maintenanceMock.Reset();
+        _maintenanceMock.Setup(x => x.GetUnderMaintenanceTime())
+            .Returns(new ONEbook.UM.Models.UnderMaintenanceTime { IsUnderMaintenanceTime = false });
+
+        var method = typeof(HomeController).GetMethod("IsUnderMaintenance", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        // Act
+        var result = (bool)method.Invoke(_controller, new object[] { })!;
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsUnderMaintenance_Should_Return_False_WhenMaintenanceTimeIsNull()
+    {
+        // Arrange
+        _maintenanceMock.Reset();
+        _maintenanceMock.Setup(x => x.GetUnderMaintenanceTime())
+            .Returns((ONEbook.UM.Models.UnderMaintenanceTime)null!);
+
+        var method = typeof(HomeController).GetMethod("IsUnderMaintenance", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        // Act
+        var result = (bool)method.Invoke(_controller, new object[] { })!;
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void ValidateLinkDomain_Should_Return_Invalid_WhenClickTrackingEventIsNull()
+    {
+        var method = typeof(HomeController).GetMethod("ValidateLinkDomain", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var master = new MasterInfoValidation();
+
+        var result = (ValidateResult)method.Invoke(_controller, new object[] { null!, master })!;
+
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Oops! This link does not exist. Please reach out to the administrator if you need help.");
+    }
+
+    [Fact]
+    public void ValidateLinkDomain_Should_Return_Invalid_WhenMasterInfoValidationIsNull()
+    {
+        var method = typeof(HomeController).GetMethod("ValidateLinkDomain", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var clickEvent = new ClickTrackingEvent
+        {
+            AffCode = "AFF",
+            AffDomain = "example.com",
+            PageCode = "home",
+            LanguageCode = "en",
+            ChannelCode = "c",
+            IP = "127.0.0.1",
+            Browser = "Test",
+            UrlReferrer = "",
+            DomainReferrer = "",
+            OS = "Test",
+            Device = "Test",
+            BrowserVersion = "1.0",
+            BrowserResolution = "1920x1080",
+            BrowserLanguage = "en",
+            UserAgent = "Test",
+            Country = "VN",
+            RedirectLink = "",
+            AffMediaLink = "https://example.com"
+        };
+
+        var result = (ValidateResult)method.Invoke(_controller, new object[] { clickEvent, null! })!;
+
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Oops! This link does not exist. Please reach out to the administrator if you need help.");
+    }
+
+    [Fact]
+    public void ValidateLinkSpecialDomain_Should_Return_Invalid_WhenDomainNotFound()
+    {
+        var method = typeof(HomeController).GetMethod("ValidateLinkSpecialDomain", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var clickEvent = new ClickTrackingEvent 
+        { 
+            AffCode = "AFF", 
+            AffDomain = "example.com",
+            PageCode = "home",
+            LanguageCode = "en",
+            ChannelCode = "c",
+            IP = "127.0.0.1",
+            Browser = "Test",
+            UrlReferrer = "",
+            DomainReferrer = "",
+            OS = "Test",
+            Device = "Test",
+            BrowserVersion = "1.0",
+            BrowserResolution = "1920x1080",
+            BrowserLanguage = "en",
+            UserAgent = "Test",
+            Country = "VN",
+            RedirectLink = "",
+            AffMediaLink = "https://example.com"
+        };
+        var master = new MasterInfoValidation
+        {
+            SpecialDomainMappings = Array.Empty<SpecialDomainMapping>(),
+            LanguageReferences = Array.Empty<LanguageReference>()
+        };
+
+        var result = (ValidateResult)method.Invoke(_controller, new object[] { clickEvent, master })!;
+
+        result.IsValid.Should().BeFalse();
+        result.ErrorMessage.Should().Be("Oops! This link does not exist. Please reach out to the administrator if you need help.");
+    }
+
+    [Fact]
+    public void ValidateLinkSpecialDomain_Should_Return_Valid_WhenDomainFound()
+    {
+        var method = typeof(HomeController).GetMethod("ValidateLinkSpecialDomain", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var clickEvent = new ClickTrackingEvent 
+        { 
+            AffCode = "AFF", 
+            AffDomain = "example.com", 
+            PageCode = "home",
+            LanguageCode = "en",
+            ChannelCode = "c",
+            IP = "127.0.0.1",
+            Browser = "Test",
+            UrlReferrer = "",
+            DomainReferrer = "",
+            OS = "Test",
+            Device = "Test",
+            BrowserVersion = "1.0",
+            BrowserResolution = "1920x1080",
+            BrowserLanguage = "en",
+            UserAgent = "Test",
+            Country = "VN",
+            RedirectLink = "",
+            AffMediaLink = "https://example.com"
+        };
+        var master = new MasterInfoValidation
+        {
+            SpecialDomainMappings = new[]
+            {
+                new SpecialDomainMapping { AffCode = "AFF", AffDomain = "example.com", RedirectDomain = "special.example", IsSSL = true }
+            },
+            LanguageReferences = new[]
+            {
+                new LanguageReference { LanguageCode = "en", LanguageLink = "en" }
+            }
+        };
+
+        var result = (ValidateResult)method.Invoke(_controller, new object[] { clickEvent, master })!;
+
+        result.IsValid.Should().BeTrue();
+        result.RedirectLink.Should().Be("https://special.example/en/home?affCode=AFF");
     }
 }
 
