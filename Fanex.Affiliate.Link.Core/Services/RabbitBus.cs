@@ -32,7 +32,7 @@ public class RabbitBus(ILogService logService) : IRabbitBus
                     await advancedBus.PublishAsync(
                            exchange.Value,
                            routingKey: $"{Constants.QueueIdentify}.routing",
-                           mandatory: false,
+                           mandatory: true,
                        new Message<T>(model)
                        );
 
