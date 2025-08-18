@@ -6,4 +6,6 @@ public interface IRabbitBus
 {
     void SetBus(IAdvancedBus bus);
     Task<bool> PublishAsync<T>(T model);
+
+    Task RegisterQueueAsync();
 }

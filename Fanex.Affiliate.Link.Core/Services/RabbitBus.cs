@@ -24,7 +24,7 @@ public class RabbitBus(ILogService logService) : IRabbitBus
             {
                 if (!exchange.HasValue)
                 {
-                    await ExchangeDeclareAsync();
+                    await RegisterQueueAsync();
                 }
 
                 if (exchange.HasValue)
@@ -34,7 +34,7 @@ public class RabbitBus(ILogService logService) : IRabbitBus
                            routingKey: $"{Constants.QueueIdentify}.routing",
                            mandatory: true,
                        new Message<T>(model)
-                       );
+                       ).ConfigureAwait(false);
 
                     result = true;
 
@@ -54,17 +54,20 @@ public class RabbitBus(ILogService logService) : IRabbitBus
         return result;
     }
 
-    private async Task ExchangeDeclareAsync()
+    public async Task RegisterQueueAsync()
     {
-        try
+        const string exchangeName = $"{Core.Constants.QueueIdentify}.exchange";
+        const string queueName = $"{Core.Constants.QueueIdentify}.queue";
+        const string routingKey = $"{Core.Constants.QueueIdentify}.routing";
+        exchange = await advancedBus.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct);
+        var queue = await advancedBus!.QueueDeclareAsync(queueName, c =>
         {
-            const string exchangeName = $"{Constants.QueueIdentify}.exchange";
-            exchange = await advancedBus.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct);
-        }
-        catch (Exception ex)
-        {
-            logService.LogFileMessage($"Error declaring exchange: {ex.Message}");
-            exchange = null;
-        }
+            c.AsDurable(true);
+            c.AsExclusive(false);
+            c.AsAutoDelete(false);
+            c.WithArgument("x-queue-type", "quorum");
+        });
+
+        await advancedBus.BindAsync(exchange.Value, queue, routingKey);
     }
 }

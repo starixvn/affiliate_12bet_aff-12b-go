@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using EasyNetQ;
-using EasyNetQ.Topology;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 
 namespace Fanex.Affiliate.Link.Workers;
@@ -12,6 +11,7 @@ public class RabbitMqBusHostedService : BackgroundService
 
     private IBus? bus;
     private readonly IRabbitBus rabbitBus;
+    private readonly SemaphoreSlim connectionLock = new(1, 1);
 
     public RabbitMqBusHostedService(
         ILogService logService,
@@ -39,6 +39,7 @@ public class RabbitMqBusHostedService : BackgroundService
         bus.Advanced.Disconnected += async (_, _) =>
         {
             await TryConnectToRabbitMqAsync(stoppingToken);
+            logService.LogFileMessage("RabbitMQ disconnected.");
         };
 
         await TryConnectToRabbitMqAsync(stoppingToken);
@@ -52,6 +53,11 @@ public class RabbitMqBusHostedService : BackgroundService
 
     private async Task TryConnectToRabbitMqAsync(CancellationToken stoppingToken)
     {
+        if (!await connectionLock.WaitAsync(0))
+        {
+            return;
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -63,20 +69,8 @@ public class RabbitMqBusHostedService : BackgroundService
                     continue;
                 }
 
-                const string exchangeName = $"{Core.Constants.QueueIdentify}.exchange";
-                const string queueName = $"{Core.Constants.QueueIdentify}.queue";
-                const string routingKey = $"{Core.Constants.QueueIdentify}.routing";
-                var exchange = await bus.Advanced.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct);
-                var queue = await bus.Advanced.QueueDeclareAsync(queueName, c =>
-                {
-                    c.AsDurable(true);
-                    c.AsExclusive(false);
-                    c.AsAutoDelete(false);
-                    c.WithArgument("x-queue-type", "quorum");
-                });
-
-                await bus.Advanced.BindAsync(exchange, queue, routingKey);
                 rabbitBus.SetBus(bus.Advanced);
+                await rabbitBus.RegisterQueueAsync();
                 break;
             }
             catch (Exception ex)
@@ -86,5 +80,7 @@ public class RabbitMqBusHostedService : BackgroundService
                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
             }
         }
+
+        connectionLock.Release();
     }
 }
