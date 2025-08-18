@@ -9,4 +9,6 @@ public class SpecialDomainMapping
     public string RedirectDomain { get; set; }
 
     public bool IsSSL { get; set; }
+
+    public bool IsMobile { get; set; }
 }

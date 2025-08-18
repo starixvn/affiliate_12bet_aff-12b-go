@@ -315,7 +315,7 @@ public class HomeControllerTests
         {
             SpecialDomainMappings = new[]
             {
-                new SpecialDomainMapping { AffCode = "AFF", AffDomain = clickEvent.AffDomain, RedirectDomain = "special.example", IsSSL = true }
+                new SpecialDomainMapping { AffCode = "AFF", AffDomain = clickEvent.AffDomain, RedirectDomain = "special.example", IsSSL = true, IsMobile = true }
             },
             LanguageReferences = new[]
             {
@@ -950,7 +950,7 @@ public class HomeControllerTests
         {
             SpecialDomainMappings = new[]
             {
-                new SpecialDomainMapping { AffCode = "AFF", AffDomain = "example.com", RedirectDomain = "special.example", IsSSL = true }
+                new SpecialDomainMapping { AffCode = "AFF", AffDomain = "example.com", RedirectDomain = "special.example", IsSSL = true, IsMobile = false }
             },
             LanguageReferences = new[]
             {

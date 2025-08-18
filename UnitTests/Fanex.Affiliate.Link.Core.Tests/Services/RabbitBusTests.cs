@@ -5,6 +5,12 @@ using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using FluentAssertions;
 using Moq;
 using Xunit;
+using System;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+
+using CoreRabbitBus = Fanex.Affiliate.Link.Core.Services.RabbitBus;
 
 namespace Fanex.Affiliate.Link.Core.Tests.Services;
 
@@ -12,91 +18,118 @@ public class RabbitBusTests
 {
     private readonly Mock<ILogService> _mockLogService;
     private readonly Mock<IAdvancedBus> _mockAdvancedBus;
-    private readonly Fanex.Affiliate.Link.Core.Services.RabbitBus _rabbitBus;
+    private readonly CoreRabbitBus _rabbitBus;
 
     public RabbitBusTests()
     {
-        _mockLogService = new Mock<ILogService>();
-        _mockAdvancedBus = new Mock<IAdvancedBus>();
-        
-        _rabbitBus = new Fanex.Affiliate.Link.Core.Services.RabbitBus(_mockLogService.Object);
+        _mockLogService = new Mock<ILogService>(MockBehavior.Strict);
+        _mockAdvancedBus = new Mock<IAdvancedBus>(MockBehavior.Strict);
+
+        // Common log setups
+        _mockLogService.Setup(x => x.LogFileMessage(It.IsAny<string>())).Verifiable();
+        _mockLogService.Setup(x => x.SentryErrorAsync(It.IsAny<string>(), It.IsAny<Exception>()))
+            .Returns(Task.CompletedTask);
+
+        _rabbitBus = new CoreRabbitBus(_mockLogService.Object);
+    }
+
+    private static void PrimeExchange(object rabbitBus, string name = "affiliate.exchange")
+    {
+        var field = typeof(CoreRabbitBus).GetField("exchange", BindingFlags.NonPublic | BindingFlags.Instance);
+        field!.SetValue(rabbitBus, new Exchange(name));
     }
 
     [Fact]
-    public void SetBus_ShouldSetAdvancedBus()
+    public async Task SetBus_ShouldSetAdvancedBus()
     {
-        // Act
         _rabbitBus.SetBus(_mockAdvancedBus.Object);
-
-        // Assert
-        // We can't directly verify the private field, but we can test the behavior
-        // by calling PublishAsync which uses the bus
+        _mockAdvancedBus.SetupGet(x => x.IsConnected).Returns(false);
+        var result = await _rabbitBus.PublishAsync(new TestModel());
+        result.Should().BeFalse();
     }
 
     [Fact]
     public async Task PublishAsync_ShouldReturnFalse_WhenBusIsNull()
     {
-        // Arrange
-        var testModel = new TestModel { Id = 1, Name = "Test" };
-
-        // Act
-        var result = await _rabbitBus.PublishAsync(testModel);
-
-        // Assert
+        var result = await _rabbitBus.PublishAsync(new TestModel());
         result.Should().BeFalse();
     }
 
     [Fact]
     public async Task PublishAsync_ShouldReturnFalse_WhenBusIsNotConnected()
     {
-        // Arrange
-        var testModel = new TestModel { Id = 1, Name = "Test" };
         _rabbitBus.SetBus(_mockAdvancedBus.Object);
-        _mockAdvancedBus.Setup(x => x.IsConnected).Returns(false);
+        _mockAdvancedBus.SetupGet(x => x.IsConnected).Returns(false);
 
-        // Act
-        var result = await _rabbitBus.PublishAsync(testModel);
-
-        // Assert
+        var result = await _rabbitBus.PublishAsync(new TestModel());
         result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task PublishAsync_ShouldReturnTrue_WhenPublishSucceeds()
+    public async Task PublishAsync_ShouldPublish_WhenExchangePrimed()
     {
         // Arrange
-        var testModel = new TestModel { Id = 1, Name = "Test" };
-        var exchangeValue = new Exchange("test.exchange");
-        
         _rabbitBus.SetBus(_mockAdvancedBus.Object);
-        _mockAdvancedBus.Setup(x => x.IsConnected).Returns(true);
-        // Setup calls removed to avoid CS0854 expression tree errors
+        _mockAdvancedBus.SetupGet(x => x.IsConnected).Returns(true);
+        PrimeExchange(_rabbitBus);
+
+        _mockAdvancedBus
+            .Setup(x => x.PublishAsync(
+                It.IsAny<Exchange>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
+                It.IsAny<IMessage<TestModel>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _rabbitBus.PublishAsync(testModel);
+        var result = await _rabbitBus.PublishAsync(new TestModel { Id = 1, Name = "ok" });
 
         // Assert
         result.Should().BeTrue();
+        _mockLogService.Verify(x => x.LogFileMessage(It.Is<string>(s => s.Contains("Published model"))), Times.Once);
     }
 
     [Fact]
-    public async Task PublishAsync_ShouldHandlePublishException()
+    public async Task PublishAsync_ShouldHandlePublishException_WhenExchangePrimed()
     {
         // Arrange
-        var testModel = new TestModel { Id = 1, Name = "Test" };
-        
         _rabbitBus.SetBus(_mockAdvancedBus.Object);
-        _mockAdvancedBus.Setup(x => x.IsConnected).Returns(true);
+        _mockAdvancedBus.SetupGet(x => x.IsConnected).Returns(true);
+        PrimeExchange(_rabbitBus);
+
+        _mockAdvancedBus
+            .Setup(x => x.PublishAsync(
+                It.IsAny<Exchange>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
+                It.IsAny<IMessage<TestModel>>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("publish failed"));
 
         // Act
-        var result = await _rabbitBus.PublishAsync(testModel);
+        var result1 = await _rabbitBus.PublishAsync(new TestModel { Id = 1, Name = "fail" });
 
         // Assert
-        // The method should return true if no exception occurs during setup
-        result.Should().BeTrue();
+        result1.Should().BeFalse();
+        _mockLogService.Verify(x => x.SentryErrorAsync(It.Is<string>(s => s.Contains("Error publishing object")), It.IsAny<Exception>()), Times.Once);
+        _mockLogService.Verify(x => x.LogFileMessage(It.Is<string>(s => s.Contains("Message queued for later publishing"))), Times.Once);
+
+        // Prime again for success path
+        PrimeExchange(_rabbitBus);
+        _mockAdvancedBus
+            .Setup(x => x.PublishAsync(
+                It.IsAny<Exchange>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
+                It.IsAny<IMessage<TestModel>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var result2 = await _rabbitBus.PublishAsync(new TestModel { Id = 2, Name = "ok" });
+        result2.Should().BeTrue();
     }
 
-    // Test model for testing
     private class TestModel
     {
         public int Id { get; set; }
