@@ -296,7 +296,7 @@
             }
 
             var landingPage = masterInfoValidation.LandingPages
-                .FirstOrDefault(page => page.PageCode == clickTrackingEvent.PageCode);
+                .FirstOrDefault(page => string.Equals(page.PageCode, clickTrackingEvent.PageCode, StringComparison.InvariantCultureIgnoreCase));
 
             var landingPageCode = GetLandingPageCode(
                 landingPage,
@@ -412,7 +412,7 @@
 
             return LandingPage.SupportedPageCodeOnV1.TryGetValue(pageCodeLower, out string pageCodeOnV2)
                 ? pageCodeOnV2
-                : pageCodeLower;
+                : pageCode;
         }
 
         private string GetFullAffDomain(string urlWithoutProtocol, string endPointOfAffDomain)
