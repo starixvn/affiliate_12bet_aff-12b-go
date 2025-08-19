@@ -389,6 +389,13 @@
                 return new ValidateResult { IsValid = false, ErrorMessage = LinkIsInvalidMessage };
             }
 
+            var isValidLandingPage = masterInfoValidation.LandingPages.Any(m => m.PageCode == clickTrackingEvent.PageCode && domain.IsMobile == m.IsMobile);
+            if (!isValidLandingPage)
+            {
+                var defaultLandingPage = masterInfoValidation.LandingPages.FirstOrDefault(m => m.IsDefault);
+                clickTrackingEvent.PageCode = defaultLandingPage.PageCode;
+            }
+
             var languageLink = masterInfoValidation.LanguageReferences.FirstOrDefault(m => m.LanguageCode == clickTrackingEvent.LanguageCode);
             var specialDomain = $"{(domain.IsSSL ? "https" : "http")}://{domain.RedirectDomain}/{languageLink.LanguageLink}/{clickTrackingEvent.PageCode}?affCode={domain.AffCode}";
             return new ValidateResult { IsValid = true, RedirectLink = specialDomain };

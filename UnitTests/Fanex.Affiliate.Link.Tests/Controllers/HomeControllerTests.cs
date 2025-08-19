@@ -322,7 +322,11 @@ public class HomeControllerTests
                 new LanguageReference { LanguageCode = clickEvent.LanguageCode, LanguageLink = "en" }
             },
             AffiliateDeals = new[] { new AffiliateDeal { AffCode = "AFF", DealName = "MarketingGroup", DealId = 1 } },
-            DomainMappings = Array.Empty<DomainMapping>()
+            DomainMappings = Array.Empty<DomainMapping>(),
+            LandingPages = new[]
+            {
+                new LandingPageSetting { PageCode = "landing", IsMobile = true}
+            }
         };
 
         _clickTrackingMock.Setup(x => x.GetMasterDataForValidateClicked()).ReturnsAsync(master);
@@ -929,7 +933,7 @@ public class HomeControllerTests
         { 
             AffCode = "AFF", 
             AffDomain = "example.com", 
-            PageCode = "home",
+            PageCode = "landing",
             LanguageCode = "en",
             ChannelCode = "c",
             IP = "127.0.0.1",
@@ -955,13 +959,65 @@ public class HomeControllerTests
             LanguageReferences = new[]
             {
                 new LanguageReference { LanguageCode = "en", LanguageLink = "en" }
+            },
+            LandingPages = new[]
+            {
+                new LandingPageSetting { PageCode = "landing", IsDefault = true }
             }
         };
 
         var result = (ValidateResult)method.Invoke(_controller, new object[] { clickEvent, master })!;
 
         result.IsValid.Should().BeTrue();
-        result.RedirectLink.Should().Be("https://special.example/en/home?affCode=AFF");
+        result.RedirectLink.Should().Be("https://special.example/en/landing?affCode=AFF");
+    }
+
+    [Fact]
+    public void ValidateLinkSpecialDomain_Should_Return_DefeutLink_WhenIsMobileInvalid()
+    {
+        var method = typeof(HomeController).GetMethod("ValidateLinkSpecialDomain", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        var clickEvent = new ClickTrackingEvent
+        {
+            AffCode = "AFF",
+            AffDomain = "example.com",
+            PageCode = "landing",
+            LanguageCode = "en",
+            ChannelCode = "c",
+            IP = "127.0.0.1",
+            Browser = "Test",
+            UrlReferrer = "",
+            DomainReferrer = "",
+            OS = "Test",
+            Device = "Test",
+            BrowserVersion = "1.0",
+            BrowserResolution = "1920x1080",
+            BrowserLanguage = "en",
+            UserAgent = "Test",
+            Country = "VN",
+            RedirectLink = "",
+            AffMediaLink = "https://example.com"
+        };
+        var master = new MasterInfoValidation
+        {
+            SpecialDomainMappings = new[]
+            {
+                new SpecialDomainMapping { AffCode = "AFF", AffDomain = "example.com", RedirectDomain = "special.example", IsSSL = true, IsMobile = false }
+            },
+            LanguageReferences = new[]
+            {
+                new LanguageReference { LanguageCode = "en", LanguageLink = "en" }
+            },
+            LandingPages = new[]
+            {
+                new LandingPageSetting { PageCode = "join", IsDefault = true, IsMobile = false },
+                new LandingPageSetting { PageCode = "landing", IsDefault = false, IsMobile = true }
+            }
+        };
+
+        var result = (ValidateResult)method.Invoke(_controller, new object[] { clickEvent, master })!;
+
+        result.IsValid.Should().BeTrue();
+        result.RedirectLink.Should().Be("https://special.example/en/join?affCode=AFF");
     }
 }
 

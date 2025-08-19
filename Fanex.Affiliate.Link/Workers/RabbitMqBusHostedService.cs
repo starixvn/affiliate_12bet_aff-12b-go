@@ -12,6 +12,7 @@ public class RabbitMqBusHostedService : BackgroundService
     private IBus? bus;
     private readonly IRabbitBus rabbitBus;
     private readonly SemaphoreSlim connectionLock = new(1, 1);
+    private bool isConnected;
 
     public RabbitMqBusHostedService(
         ILogService logService,
@@ -58,23 +59,17 @@ public class RabbitMqBusHostedService : BackgroundService
             return;
         }
 
-        while (!stoppingToken.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested && !isConnected)
         {
             try
             {
-                if (bus == null)
-                {
-                    await logService.SentryErrorAsync("RabbitMQ bus is not initialized");
-                    await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
-                    continue;
-                }
-
-                rabbitBus.SetBus(bus.Advanced);
+                rabbitBus.SetBus(bus!.Advanced);
                 await rabbitBus.RegisterQueueAsync();
-                break;
+                isConnected = true;
             }
             catch (Exception ex)
             {
+                isConnected = false;
                 await logService.SentryErrorAsync("RabbitMQ connect failed. Retrying in 10s...", ex);
                 logService.LogFileError(ex);
                 await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
