@@ -341,7 +341,7 @@
 
             var isDealIdInList = dealIdList.Contains(dealIdString);
             var isExcludedAndInList = domain.IsExcluded && isDealIdInList;
-            var isIncludedAndNotInList = !domain.IsExcluded && !isDealIdInList;
+            var isIncludedAndNotInList = !domain.IsExcluded && (!isDealIdInList && !dealIdList.Contains("0"));
 
             return isExcludedAndInList || isIncludedAndNotInList;
         }
@@ -353,28 +353,32 @@
             DomainMapping domain,
             string requestedPageCode)
         {
-            // If landing page is not found, fallback to default
-            if (landingPage == null)
+            // Helper to get default landing page code
+            string GetDefaultLandingPageCode()
             {
-                var defaultLandingPage = masterInfoValidation.LandingPages.FirstOrDefault(m => m.IsDefault);
-                return defaultLandingPage?.PageCode;
+                return masterInfoValidation.LandingPages.FirstOrDefault(m => m.IsDefault)?.PageCode;
             }
 
-            // Defensive: ensure DealIds is not null or whitespace
+            if (landingPage == null)
+            {
+                return GetDefaultLandingPageCode();
+            }
+
             var dealIds = landingPage.DealIds ?? string.Empty;
             var dealIdList = dealIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
-            bool isDealIdInList = dealIdList.Contains(affDeal.DealId.ToString());
+            var dealIdString = affDeal.DealId.ToString();
+            bool isDealIdInList = dealIdList.Contains(dealIdString);
+            bool containsZero = dealIdList.Contains("0");
 
-            // Exclusion/inclusion and mobile check
-            bool isExcludedAndInList = landingPage.IsExcluded && isDealIdInList;
-            bool isIncludedAndNotInList = !landingPage.IsExcluded && !isDealIdInList;
-            bool isMobileMismatch = landingPage.IsMobile != domain.IsMobile;
+            // Clarify logic for exclusion/inclusion and mobile check
+            var isExcludedAndInList = landingPage.IsExcluded && isDealIdInList;
+            var isIncludedAndNotInList = !landingPage.IsExcluded && !isDealIdInList && !containsZero;
+            var isMobileMismatch = landingPage.IsMobile != domain.IsMobile;
 
             if (isExcludedAndInList || isIncludedAndNotInList || isMobileMismatch)
             {
-                var defaultLandingPage = masterInfoValidation.LandingPages.FirstOrDefault(m => m.IsDefault);
-                return defaultLandingPage?.PageCode;
+                return GetDefaultLandingPageCode();
             }
 
             return requestedPageCode;
