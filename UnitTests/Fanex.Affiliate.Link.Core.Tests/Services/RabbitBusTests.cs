@@ -469,6 +469,115 @@ public class RabbitBusTests
         _mockLogService.Verify(x => x.LogFileMessage(It.Is<string>(s => s.Contains("Published model"))), Times.Once);
     }
 
+    // ===== NEW HEALTH CHECK TESTS =====
+
+    [Fact]
+    public void IsConnected_ShouldReturnFalse_WhenAdvancedBusIsNull()
+    {
+        // Act
+        var result = _rabbitBus.IsConnected;
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsConnected_ShouldReturnTrue_WhenAdvancedBusIsConnected()
+    {
+        // Arrange
+        _mockAdvancedBus.SetupGet(x => x.IsConnected).Returns(true);
+        _rabbitBus.SetBus(_mockAdvancedBus.Object);
+
+        // Act
+        var result = _rabbitBus.IsConnected;
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsConnected_ShouldReturnFalse_WhenAdvancedBusIsNotConnected()
+    {
+        // Arrange
+        _mockAdvancedBus.SetupGet(x => x.IsConnected).Returns(false);
+        _rabbitBus.SetBus(_mockAdvancedBus.Object);
+
+        // Act
+        var result = _rabbitBus.IsConnected;
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetConnectionInfoAsync_ShouldReturnBasicInfo_WhenAdvancedBusIsNull()
+    {
+        // Act
+        var result = await _rabbitBus.GetConnectionInfoAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result["IsConnected"].Should().Be(false);
+        result["HasAdvancedBus"].Should().Be(false);
+        result["HasExchange"].Should().Be(false);
+        result.Should().ContainKey("LastCheck");
+    }
+
+    [Fact]
+    public async Task GetConnectionInfoAsync_ShouldReturnDetailedInfo_WhenAdvancedBusIsConnected()
+    {
+        // Arrange
+        _mockAdvancedBus.SetupGet(x => x.IsConnected).Returns(true);
+        _rabbitBus.SetBus(_mockAdvancedBus.Object);
+
+        // Act
+        var result = await _rabbitBus.GetConnectionInfoAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result["IsConnected"].Should().Be(true);
+        result["HasAdvancedBus"].Should().Be(true);
+        result["ConnectionState"].Should().Be("Connected");
+        result["ConnectionActive"].Should().Be(true);
+        result["ConnectionType"].Should().Be("EasyNetQ.IAdvancedBus");
+    }
+
+    [Fact]
+    public async Task GetConnectionInfoAsync_ShouldReturnDisconnectedInfo_WhenAdvancedBusIsNotConnected()
+    {
+        // Arrange
+        _mockAdvancedBus.SetupGet(x => x.IsConnected).Returns(false);
+        _rabbitBus.SetBus(_mockAdvancedBus.Object);
+
+        // Act
+        var result = await _rabbitBus.GetConnectionInfoAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result["IsConnected"].Should().Be(false);
+        result["HasAdvancedBus"].Should().Be(true);
+        result["ConnectionState"].Should().Be("Disconnected");
+        result.Should().NotContainKey("ConnectionActive");
+    }
+
+    [Fact]
+    public async Task GetConnectionInfoAsync_ShouldHandleException_AndLogError()
+    {
+        // Arrange - Setup a scenario where IsConnected throws an exception
+        _mockAdvancedBus.SetupSequence(x => x.IsConnected)
+            .Returns(false) // First call in IsConnected property works
+            .Throws(new Exception("Connection info error")); // Second call in GetConnectionInfoAsync throws
+        _rabbitBus.SetBus(_mockAdvancedBus.Object);
+
+        // Act
+        var result = await _rabbitBus.GetConnectionInfoAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result["Error"].Should().Be("Connection info error");
+        _mockLogService.Verify(x => x.SentryErrorAsync("Failed to get RabbitMQ connection info", It.IsAny<Exception>()), Times.Once);
+    }
+
     private class TestModel
     {
         public int Id { get; set; }

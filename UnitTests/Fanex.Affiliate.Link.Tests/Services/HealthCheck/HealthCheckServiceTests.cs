@@ -1,7 +1,6 @@
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using Fanex.Affiliate.Link.Services.HealthCheck;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using ONEbook.UM.Models;
 using ONEbook.UM.Services;
@@ -20,13 +19,13 @@ public class HealthCheckServiceTests
     {
         repo = new Mock<Fanex.Data.Repository.IDynamicRepository>();
         redis = new Mock<IRedisService>();
+        var rabbitBus = new Mock<IRabbitBus>();
         maint = new Mock<IMaintenanceService>();
         cfg = new Mock<IHealthCheckConfigurationService>();
         history = new Mock<IHealthCheckHistoryService>();
         var logger = new Mock<Microsoft.Extensions.Logging.ILogger<HealthCheckService>>();
-        var configuration = new ConfigurationBuilder().Build();
 
-        return new HealthCheckService(repo.Object, redis.Object, maint.Object, cfg.Object, history.Object, configuration, logger.Object);
+        return new HealthCheckService(repo.Object, redis.Object, rabbitBus.Object, maint.Object, cfg.Object, history.Object, logger.Object);
     }
 
     [Fact]

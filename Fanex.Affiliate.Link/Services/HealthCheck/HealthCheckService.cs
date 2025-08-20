@@ -2,11 +2,12 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
 {
     using Constants;
     using Fanex.Affiliate.Link.Core.Services.Interfaces;
+    using Fanex.Affiliate.Link.Criterias;
+    using Fanex.Affiliate.Link.Helpers;
     using Fanex.Data.Repository;
     using Models.HealthCheck;
     using ONEbook.UM.Services;
     using System.Diagnostics;
-    using System.Reflection;
 
     /// <summary>
     /// Comprehensive health check service implementation
@@ -15,6 +16,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
     {
         private readonly IDynamicRepository _dynamicRepository;
         private readonly IRedisService _redisService;
+        private readonly IRabbitBus _rabbitBus;
         private readonly IMaintenanceService _maintenanceService;
         private readonly IHealthCheckConfigurationService _configService;
         private readonly IHealthCheckHistoryService _historyService;
@@ -24,19 +26,20 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
         public HealthCheckService(
             IDynamicRepository dynamicRepository,
             IRedisService redisService,
+            IRabbitBus rabbitBus,
             IMaintenanceService maintenanceService,
             IHealthCheckConfigurationService configService,
             IHealthCheckHistoryService historyService,
-            IConfiguration configuration,
             ILogger<HealthCheckService> logger)
         {
             _dynamicRepository = dynamicRepository ?? throw new ArgumentNullException(nameof(dynamicRepository));
             _redisService = redisService ?? throw new ArgumentNullException(nameof(redisService));
+            _rabbitBus = rabbitBus ?? throw new ArgumentNullException(nameof(rabbitBus));
             _maintenanceService = maintenanceService ?? throw new ArgumentNullException(nameof(maintenanceService));
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _historyService = historyService ?? throw new ArgumentNullException(nameof(historyService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _startTime = DateTimeOffset.UtcNow.DateTime;
+            _startTime = DateTimeHelper.ServerTime;
         }
 
         public async Task<HealthStatus> GetHealthStatusAsync()
@@ -99,14 +102,14 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             // Test connect Database by the dynamic repository (external API service)
             try
             {
-                var testCriteria = new Criterias.BaseCriteria("Aff_Market_Sel");
-                var result = await _dynamicRepository.FetchAsync<dynamic>(testCriteria);
+                var criteria = new GetMaxClickIdCriteria();
+                var result = await _dynamicRepository.GetAsync<long>(criteria);
 
                 stopwatch.Stop();
 
-                if (result != null)
+                if (result != 0)
                 {
-                    return ComponentHealth.Healthy("Database",
+                    return ComponentHealth.Healthy($"Database  - ClickId - {result}",
                         "Database connection via DynamicRepository successful", stopwatch.Elapsed);
                 }
 
@@ -129,7 +132,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             try
             {
                 var testKey = $"health_check_{Guid.NewGuid()}";
-                var testValue = $"test_{DateTimeOffset.UtcNow:yyyyMMddHHmmss}";
+                var testValue = $"test_{DateTimeHelper.ServerTime:yyyyMMddHHmmss}";
 
                 await _redisService.SetAsync(testKey, testValue, TimeSpan.FromSeconds(30));
                 var retrievedValue = await _redisService.GetAsync<string>(testKey);
@@ -139,13 +142,13 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                 if (retrievedValue == testValue)
                 {
                     // Clean up test key
-                    try 
-                    { 
-                        await _redisService.RemoveAsync(testKey); 
-                    } 
-                    catch 
-                    { 
-                        /* Ignore cleanup errors */ 
+                    try
+                    {
+                        await _redisService.RemoveAsync(testKey);
+                    }
+                    catch
+                    {
+                        /* Ignore cleanup errors */
                     }
 
                     return ComponentHealth.Healthy(RedisComponentName,
@@ -170,19 +173,41 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             }
         }
 
-        public Task<ComponentHealth> CheckRabbitMQHealthAsync()
+        public async Task<ComponentHealth> CheckRabbitMQHealthAsync()
         {
+            const string RabbitMQComponentName = "RabbitMQ";
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
-                return Task.FromResult(ComponentHealth.Warning("RabbitMQ",
-                    "RabbitMQ connection is not active", stopwatch.Elapsed));
+                if (!_rabbitBus.IsConnected)
+                {
+                    stopwatch.Stop();
+                    return ComponentHealth.Unhealthy(RabbitMQComponentName,
+                        "RabbitMQ connection is not active", stopwatch.Elapsed);
+                }
+
+                var connectionInfo = await _rabbitBus.GetConnectionInfoAsync();
+                stopwatch.Stop();
+
+                var description = $"RabbitMQ connection is active and responsive (response time: {stopwatch.ElapsedMilliseconds}ms)";
+
+                var healthResult = ComponentHealth.Healthy(RabbitMQComponentName, description, stopwatch.Elapsed);
+                healthResult.Data = connectionInfo;
+                return healthResult;
+            }
+            catch (TimeoutException)
+            {
+                stopwatch.Stop();
+                return ComponentHealth.Warning(RabbitMQComponentName,
+                    "RabbitMQ health check timeout", stopwatch.Elapsed);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "RabbitMQ health check failed");
-                return Task.FromResult(ComponentHealth.Unhealthy("RabbitMQ", ex.Message, stopwatch.Elapsed));
+                stopwatch.Stop();
+                _logger.LogDebug(ex, "RabbitMQ health check failed");
+                return ComponentHealth.Warning(RabbitMQComponentName,
+                    $"RabbitMQ connection issue: {ex.Message}", stopwatch.Elapsed);
             }
         }
 
@@ -295,7 +320,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                 {
                     MemoryUsedBytes = process.WorkingSet64,
                     ActiveThreads = process.Threads.Count,
-                    Uptime = DateTimeOffset.UtcNow - _startTime,
+                    Uptime = DateTimeHelper.ServerTime - _startTime,
                     Version = assembly.GetName().Version?.ToString() ?? "Unknown",
                     Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown",
                     AdditionalMetrics = new Dictionary<string, object>

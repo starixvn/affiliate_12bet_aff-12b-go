@@ -59,7 +59,9 @@ public class MessagePackSerializerTests
         object? testObject = null;
 
         // Act
+#pragma warning disable CS8604 // Possible null reference argument.
         var serializedData = _serializer.Serialize(testObject);
+#pragma warning restore CS8604 // Possible null reference argument.
 
         // Assert
         serializedData.Should().NotBeNull();

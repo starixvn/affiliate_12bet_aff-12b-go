@@ -10,6 +10,8 @@ public class RabbitBus(ILogService logService) : IRabbitBus
     private IAdvancedBus? advancedBus;
     private Exchange? exchange;
 
+    public bool IsConnected => advancedBus?.IsConnected ?? false;
+
     public void SetBus(IAdvancedBus bus)
     {
         advancedBus = bus;
@@ -18,7 +20,7 @@ public class RabbitBus(ILogService logService) : IRabbitBus
     public async Task<bool> PublishAsync<T>(T model)
     {
         var result = false;
-        if (advancedBus != null && advancedBus.IsConnected) 
+        if (IsConnected)
         {
             try
             {
@@ -29,13 +31,14 @@ public class RabbitBus(ILogService logService) : IRabbitBus
 
                 if (exchange.HasValue)
                 {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                     await advancedBus.PublishAsync(
                            exchange.Value,
                            routingKey: $"{Constants.QueueIdentify}.routing",
                            mandatory: true,
                        new Message<T>(model)
                        ).ConfigureAwait(false);
-
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                     result = true;
 
                     logService.LogFileMessage($"Published model {JsonConvert.SerializeObject(model)} successfully!");
@@ -69,5 +72,37 @@ public class RabbitBus(ILogService logService) : IRabbitBus
         });
 
         await advancedBus.BindAsync(exchange.Value, queue, routingKey);
+    }
+
+    public async Task<Dictionary<string, object>> GetConnectionInfoAsync()
+    {
+        var info = new Dictionary<string, object>
+        {
+            ["IsConnected"] = IsConnected,
+            ["HasAdvancedBus"] = advancedBus != null,
+            ["HasExchange"] = exchange.HasValue,
+            ["LastCheck"] = DateTimeOffset.Now.DateTime.ToString("yyyy-MM-dd HH:mm:ss")
+        };
+
+        if (advancedBus != null)
+        {
+            try
+            {
+                info["ConnectionState"] = advancedBus.IsConnected ? "Connected" : "Disconnected";
+
+                if (advancedBus.IsConnected)
+                {
+                    info["ConnectionActive"] = true;
+                    info["ConnectionType"] = "EasyNetQ.IAdvancedBus";
+                }
+            }
+            catch (Exception ex)
+            {
+                info["Error"] = ex.Message;
+                await logService.SentryErrorAsync("Failed to get RabbitMQ connection info", ex);
+            }
+        }
+
+        return info;
     }
 }
