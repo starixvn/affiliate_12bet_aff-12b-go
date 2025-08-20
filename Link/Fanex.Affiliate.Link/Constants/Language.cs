@@ -20,6 +20,7 @@
             ["vn"] = "vn",
             ["cs"] = CHINA_SHORTED_CODE,
             ["mycs"] = CHINA_SHORTED_CODE,
+            ["phen"] = ENGLISH_SHORTED_CODE,
         };
 
         public static readonly IReadOnlyDictionary<string, string> RemovedLanguageCodes = new Dictionary<string, string>
