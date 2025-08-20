@@ -16,8 +16,8 @@ public class LanguageTests
         var supportedLanguages = Language.SupportedLanguageCodes;
 
         // Assert
-        supportedLanguages.Should().ContainKeys("en", "bd", "hien", "hitg", "id", "jp", "ko", "th", "vn", "cs", "mycs");
-        supportedLanguages.Should().HaveCount(11);
+        supportedLanguages.Should().ContainKeys("en", "bd", "hien", "hitg", "id", "jp", "ko", "th", "vn", "cs", "mycs", "phen");
+        supportedLanguages.Should().HaveCount(12);
     }
 
     [Fact]
@@ -39,6 +39,7 @@ public class LanguageTests
     [InlineData("jp", "en")]
     [InlineData("cs", "cs")]
     [InlineData("mycs", "cs")]
+    [InlineData("phen", "en")]
     [InlineData("id", "id")]
     [InlineData("ko", "ko")]
     [InlineData("th", "th")]
@@ -102,6 +103,18 @@ public class LanguageTests
         // Assert
         cs.Should().Be(mycs);
         cs.Should().Be("cs");
+    }
+
+    [Fact]
+    public void PhilippinesLanguages_ShouldMapToSameCode()
+    {
+        // Act
+        var en = Language.SupportedLanguageCodes["en"];
+        var phen = Language.SupportedLanguageCodes["phen"];
+
+        // Assert
+        en.Should().Be(phen);
+        en.Should().Be("en");
     }
 
     [Fact]

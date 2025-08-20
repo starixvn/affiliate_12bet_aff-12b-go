@@ -71,6 +71,7 @@ public class RouteConstraintsTests
     [InlineData("vn", true)]
     [InlineData("cs", true)]
     [InlineData("mycs", true)]
+    [InlineData("phen", true)]
     [InlineData("ch", true)]
     [InlineData("kh", true)]
     [InlineData("eneuro", true)]
@@ -124,6 +125,7 @@ public class RouteConstraintsTests
         pattern.Should().Contain("hien");
         pattern.Should().Contain("hitg");
         pattern.Should().Contain("mycs");
+        pattern.Should().Contain("phen");
         
         // Verify that longer patterns appear before shorter ones in the pattern
         var enPosition = pattern.IndexOf("|en|", StringComparison.Ordinal);

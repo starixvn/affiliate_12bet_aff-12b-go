@@ -67,6 +67,7 @@ public class RegexPatternsTests
     [InlineData("vn", true)]
     [InlineData("cs", true)]
     [InlineData("mycs", true)]
+    [InlineData("phen", true)]
     [InlineData("ch", true)]
     [InlineData("kh", true)]
     [InlineData("eneuro", true)]

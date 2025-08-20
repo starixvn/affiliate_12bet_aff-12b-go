@@ -8,7 +8,7 @@ namespace Fanex.Affiliate.Link.Constants
     {
         /// <summary>
         /// Language constraint pattern generated from Language.SupportedLanguageCodes and RemovedLanguageCodes.
-        /// Includes: en, bd, bn, hien, hitg, id, jp, ko, th, vn, cs, mycs, ch, kh, eneuro
+        /// Includes: en, bd, bn, hien, hitg, id, jp, ko, th, vn, cs, mycs, ch, kh, eneuro, phen
         /// </summary>
         public static readonly string LanguageRegexPattern =
             @"(" + string.Join("|", Language.SupportedLanguageCodes.Keys
