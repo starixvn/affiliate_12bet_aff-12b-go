@@ -208,7 +208,7 @@
         private async Task<ValidateResult> ValidateLink(ClickTrackingEvent clickTrackingEvent)
         {
             ValidateResult validateResult;
-            if (IsUnderMaintenance())
+            if (!IsUnderMaintenance())
             {
                 try
                 {
@@ -324,7 +324,8 @@
             return new ValidateResult
             {
                 IsValid = true,
-                RedirectLink = redirectUrl
+                RedirectLink = redirectUrl,
+                PageCode = clickTrackingEvent.PageCode
             };
         }
 
@@ -402,7 +403,7 @@
 
             var languageLink = masterInfoValidation.LanguageReferences.FirstOrDefault(m => m.LanguageCode == clickTrackingEvent.LanguageCode);
             var specialDomain = $"{(domain.IsSSL ? "https" : "http")}://{domain.RedirectDomain}/{languageLink.LanguageLink}/{clickTrackingEvent.PageCode}?affCode={domain.AffCode}";
-            return new ValidateResult { IsValid = true, RedirectLink = specialDomain };
+            return new ValidateResult { IsValid = true, RedirectLink = specialDomain, PageCode = clickTrackingEvent.PageCode };
         }
 
         private static string GetSupportedPageCodeOnV2(string pageCode)
