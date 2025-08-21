@@ -16,7 +16,6 @@ public sealed class ClickTrackingWorker(
 {
     private IDisposable? consumerHandle;
     private bool isUnderMaintenance;
-    private bool isRunning;
     private readonly object maintenanceLock = new();
     private const int maxRetryCount = 5;
     private const int timeToReQueue = 30000;
@@ -85,12 +84,6 @@ public sealed class ClickTrackingWorker(
 
     private void StartConsumer()
     {
-        if (isRunning)
-        {
-            return;
-        }
-
-        isRunning = true;
         consumerHandle = bus.Advanced.Consume<ClickTrackingEvent>(mainQueue, async (message, _) =>
         {
             if (IsCurrentlyUnderMaintenance())
