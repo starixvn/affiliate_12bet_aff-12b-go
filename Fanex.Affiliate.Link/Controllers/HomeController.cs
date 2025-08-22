@@ -208,7 +208,7 @@
         private async Task<ValidateResult> ValidateLink(ClickTrackingEvent clickTrackingEvent)
         {
             ValidateResult validateResult;
-            if (!IsUnderMaintenance())
+            if (IsUnderMaintenance())
             {
                 try
                 {
@@ -286,7 +286,7 @@
                     mapping.AffDomain == clickTrackingEvent.AffDomain &&
                     mapping.LanguageCode == clickTrackingEvent.LanguageCode);
 
-            if (domain == null || IsDealIdExcludedOrNotIncluded(domain, affDeal))
+            if (domain == null)
             {
                 return new ValidateResult
                 {
@@ -298,28 +298,15 @@
             var landingPage = masterInfoValidation.LandingPages
                 .FirstOrDefault(page => string.Equals(page.PageCode, clickTrackingEvent.PageCode, StringComparison.InvariantCultureIgnoreCase));
 
-            var landingPageCode = GetLandingPageCode(
+            clickTrackingEvent.PageCode = GetLandingPageCode(
                 landingPage,
                 masterInfoValidation,
                 affDeal,
                 domain,
                 clickTrackingEvent.PageCode);
 
-            if (string.IsNullOrWhiteSpace(landingPageCode))
-            {
-                return new ValidateResult
-                {
-                    IsValid = false,
-                    ErrorMessage = LinkIsInvalidMessage
-                };
-            }
-            else
-            {
-                clickTrackingEvent.PageCode = landingPageCode;
-            }
-
             var protocol = domain.IsSSL ? "https" : "http";
-            var redirectUrl = $"{protocol}://{domain.RedirectDomain}/{domain.LanguageLink}/{landingPageCode}?affCode={affDeal.AffCode}";
+            var redirectUrl = $"{protocol}://{domain.RedirectDomain}/{domain.LanguageLink}/{clickTrackingEvent.PageCode}?affCode={affDeal.AffCode}";
 
             return new ValidateResult
             {
@@ -327,24 +314,6 @@
                 RedirectLink = redirectUrl,
                 PageCode = clickTrackingEvent.PageCode
             };
-        }
-
-        private static bool IsDealIdExcludedOrNotIncluded(DomainMapping domain, AffiliateDeal affDeal)
-        {
-            if (domain == null || affDeal == null)
-            {
-                return true;
-            }
-
-            var dealIds = domain.DealIds ?? string.Empty;
-            var dealIdList = dealIds.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            var dealIdString = affDeal.DealId.ToString();
-
-            var isDealIdInList = dealIdList.Contains(dealIdString);
-            var isExcludedAndInList = domain.IsExcluded && isDealIdInList;
-            var isIncludedAndNotInList = !domain.IsExcluded && (!isDealIdInList && !dealIdList.Contains("0"));
-
-            return isExcludedAndInList || isIncludedAndNotInList;
         }
 
         private static string GetLandingPageCode(
@@ -387,12 +356,13 @@
 
         private ValidateResult ValidateLinkSpecialDomain(ClickTrackingEvent clickTrackingEvent, MasterInfoValidation masterInfoValidation)
         {
-            var domain = masterInfoValidation.SpecialDomainMappings.FirstOrDefault(m => m.AffCode == clickTrackingEvent.AffCode
-                && m.AffDomain == clickTrackingEvent.AffDomain);
-            if (domain == null)
+            var isExistDomain = masterInfoValidation.SpecialDomainMappings.Any(m => m.AffDomain == clickTrackingEvent.AffDomain);
+            if (!isExistDomain)
             {
                 return new ValidateResult { IsValid = false, ErrorMessage = LinkIsInvalidMessage };
             }
+
+            var domain = masterInfoValidation.SpecialDomainMappings.FirstOrDefault(m => m.AffDomain == clickTrackingEvent.AffDomain);
 
             var isValidLandingPage = masterInfoValidation.LandingPages.Any(m => m.PageCode == clickTrackingEvent.PageCode && domain.IsMobile == m.IsMobile);
             if (!isValidLandingPage)
@@ -402,7 +372,7 @@
             }
 
             var languageLink = masterInfoValidation.LanguageReferences.FirstOrDefault(m => m.LanguageCode == clickTrackingEvent.LanguageCode);
-            var specialDomain = $"{(domain.IsSSL ? "https" : "http")}://{domain.RedirectDomain}/{languageLink.LanguageLink}/{clickTrackingEvent.PageCode}?affCode={domain.AffCode}";
+            var specialDomain = $"{(domain.IsSSL ? "https" : "http")}://{domain.RedirectDomain}/{languageLink.LanguageLink}/{clickTrackingEvent.PageCode}?affCode={clickTrackingEvent.AffCode}";
             return new ValidateResult { IsValid = true, RedirectLink = specialDomain, PageCode = clickTrackingEvent.PageCode };
         }
 

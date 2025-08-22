@@ -641,7 +641,7 @@ public class HomeControllerTests
         var result = await _controller.Link(linkParams);
 
         // Assert
-        result.Should().BeOfType<ViewResult>();
+        result.Should().BeOfType<RedirectResult>();
     }
 
     [Fact]
@@ -679,7 +679,7 @@ public class HomeControllerTests
         var result = await _controller.Link(linkParams);
 
         // Assert
-        result.Should().BeOfType<ViewResult>();
+        result.Should().BeOfType<RedirectResult>();
     }
 
     [Fact]
