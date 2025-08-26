@@ -228,12 +228,6 @@ public class WorkerLifecycleTests
             mockDatabaseService.Object,
             mockLogService.Object);
 
-        var dlqWorker = new ClickTrackingDLQWorker(
-            mockBus.Object,
-            mockMaintenanceService.Object,
-            mockDatabaseService.Object,
-            mockLogService.Object);
-
         var redisWorker = new ClickTrackingRedisStorageWorker(
             mockMaintenanceService.Object,
             mockDatabaseService.Object,
@@ -242,7 +236,6 @@ public class WorkerLifecycleTests
 
         // Act & Assert - Should not throw
         await clickTrackingWorker.StopAsync(CancellationToken.None);
-        await dlqWorker.StopAsync(CancellationToken.None);
         await redisWorker.StopAsync(CancellationToken.None);
     }
 

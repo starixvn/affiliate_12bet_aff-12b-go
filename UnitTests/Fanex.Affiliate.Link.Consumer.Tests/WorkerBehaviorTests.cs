@@ -1,8 +1,6 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using EasyNetQ;
-using Fanex.Affiliate.Link.Consumer;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Models;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
@@ -120,31 +118,6 @@ public class WorkerBehaviorTests
     }
 
     [Fact]
-    public void ClickTrackingDLQWorker_EnableMaintenanceMode_ShouldWorkCorrectly()
-    {
-        // Arrange
-        var mockBus = new Mock<IBus>();
-        var mockMaintenanceService = new Mock<IMaintenanceService>();
-        var mockDatabaseService = new Mock<IDatabaseService>();
-        var mockLogService = new Mock<ILogService>();
-
-        var worker = new ClickTrackingDLQWorker(
-            mockBus.Object,
-            mockMaintenanceService.Object,
-            mockDatabaseService.Object,
-            mockLogService.Object);
-
-        // Act & Assert
-        worker.EnableMaintenanceMode();
-        mockLogService.Verify(x => x.LogFileMessage("Maintenance mode enabled – message processing paused."), Times.Once);
-
-        // Enable again - should not log
-        mockLogService.Reset();
-        worker.EnableMaintenanceMode();
-        mockLogService.Verify(x => x.LogFileMessage(It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
     public void ClickTrackingWorker_CheckMaintenanceMode_ShouldCallMaintenanceService()
     {
         // Arrange
@@ -154,33 +127,6 @@ public class WorkerBehaviorTests
         var mockLogService = new Mock<ILogService>();
 
         var worker = new ClickTrackingWorker(
-            mockBus.Object,
-            mockMaintenanceService.Object,
-            mockDatabaseService.Object,
-            mockLogService.Object);
-
-        // Test enable maintenance
-        var maintenanceTimeEnabled = new UnderMaintenanceTime { IsUnderMaintenanceTime = true };
-        mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTimeEnabled);
-
-        // Act
-        worker.CheckMaintenanceMode();
-
-        // Assert
-        mockLogService.Verify(x => x.LogFileMessage("Maintenance mode enabled – message processing paused."), Times.Once);
-        mockMaintenanceService.Verify(x => x.GetUnderMaintenanceTime(), Times.Once);
-    }
-
-    [Fact]
-    public void ClickTrackingDLQWorker_CheckMaintenanceMode_ShouldCallMaintenanceService()
-    {
-        // Arrange
-        var mockBus = new Mock<IBus>();
-        var mockMaintenanceService = new Mock<IMaintenanceService>();
-        var mockDatabaseService = new Mock<IDatabaseService>();
-        var mockLogService = new Mock<ILogService>();
-
-        var worker = new ClickTrackingDLQWorker(
             mockBus.Object,
             mockMaintenanceService.Object,
             mockDatabaseService.Object,
@@ -215,12 +161,6 @@ public class WorkerBehaviorTests
             mockDatabaseService.Object,
             mockLogService.Object);
 
-        var dlqWorker = new ClickTrackingDLQWorker(
-            mockBus.Object,
-            mockMaintenanceService.Object,
-            mockDatabaseService.Object,
-            mockLogService.Object);
-
         var redisWorker = new ClickTrackingRedisStorageWorker(
             mockMaintenanceService.Object,
             mockDatabaseService.Object,
@@ -228,7 +168,6 @@ public class WorkerBehaviorTests
             mockLogService.Object);
 
         clickTrackingWorker.Should().NotBeNull();
-        dlqWorker.Should().NotBeNull();
         redisWorker.Should().NotBeNull();
     }
 

@@ -356,13 +356,13 @@
 
         private ValidateResult ValidateLinkSpecialDomain(ClickTrackingEvent clickTrackingEvent, MasterInfoValidation masterInfoValidation)
         {
-            var isExistDomain = masterInfoValidation.SpecialDomainMappings.Any(m => m.AffDomain == clickTrackingEvent.AffDomain);
-            if (!isExistDomain)
+            var domain = masterInfoValidation.SpecialDomainMappings.FirstOrDefault(m => m.AffDomain == clickTrackingEvent.AffDomain 
+                && m.AffCode == clickTrackingEvent.AffCode);
+
+            if (domain is null)
             {
                 return new ValidateResult { IsValid = false, ErrorMessage = LinkIsInvalidMessage };
             }
-
-            var domain = masterInfoValidation.SpecialDomainMappings.FirstOrDefault(m => m.AffDomain == clickTrackingEvent.AffDomain);
 
             var isValidLandingPage = masterInfoValidation.LandingPages.Any(m => m.PageCode == clickTrackingEvent.PageCode && domain.IsMobile == m.IsMobile);
             if (!isValidLandingPage)
