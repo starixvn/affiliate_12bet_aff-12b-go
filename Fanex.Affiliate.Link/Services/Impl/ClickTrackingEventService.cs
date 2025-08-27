@@ -89,7 +89,7 @@
 
         public async Task<long> SyncMaxClickId(bool isSync)
         {
-            const int ClickIdIncrement = 100;
+            const int ClickIdIncrement = 15000;
 
             var clickIdFromDatabase = await GetMaxClickIdFromDatabase();
             clickIdFromDatabase += ClickIdIncrement;
