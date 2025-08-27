@@ -56,8 +56,7 @@
         [HttpGet]
         public IActionResult PageNotFound() => View();
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpGet]
         public async Task<IActionResult> SyncMaxClickId(bool isSync = true)
         {
             try
