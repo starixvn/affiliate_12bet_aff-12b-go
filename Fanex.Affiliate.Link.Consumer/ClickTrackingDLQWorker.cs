@@ -20,7 +20,6 @@ public sealed class ClickTrackingDLQWorker(
     private readonly object maintenanceLock = new();
     private const int InitialDelayMilliseconds = 10;
 
-    private Exchange errorExchange;
     private Queue errorQueue;
 
     public void TurnOffConsumerMode()
@@ -116,7 +115,7 @@ public sealed class ClickTrackingDLQWorker(
     {
         await Task.Delay(InitialDelayMilliseconds, stoppingToken).ConfigureAwait(false);
         // Setup exchanges and queues
-        errorExchange = await bus.Advanced.ExchangeDeclareAsync(Constants.ErrorExchangeName, ExchangeType.Direct);
+        var errorExchange = await bus.Advanced.ExchangeDeclareAsync(Constants.ErrorExchangeName, ExchangeType.Direct);
         errorQueue = await bus.Advanced.QueueDeclareAsync(Constants.ErrorQueueName, c => c
             .AsDurable(true)
             .AsExclusive(false)

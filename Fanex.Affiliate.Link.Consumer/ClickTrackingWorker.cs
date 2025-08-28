@@ -107,7 +107,7 @@ public sealed class ClickTrackingWorker(
         });
     }
 
-    private async Task<string> ProcessMessageWhenError(IMessage<ClickTrackingEvent> message)
+    internal async Task<string> ProcessMessageWhenError(IMessage<ClickTrackingEvent> message)
     {
         var errorMessage = string.Empty;
         var headers = message.Properties.Headers;

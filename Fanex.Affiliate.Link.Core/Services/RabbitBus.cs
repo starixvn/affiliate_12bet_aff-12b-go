@@ -57,11 +57,6 @@ public class RabbitBus(ILogService logService) : IRabbitBus
         return result;
     }
 
-    public async Task<QueueStats> GetQueueStatsAsync(string queueName)
-    {
-        return await advancedBus.GetQueueStatsAsync(queueName);
-    }
-
     public async Task RegisterQueueAsync()
     {
         exchange = await advancedBus.ExchangeDeclareAsync(Constants.MainExchangeName, ExchangeType.Direct);

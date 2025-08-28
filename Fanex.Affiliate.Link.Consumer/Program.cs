@@ -7,6 +7,7 @@ using Fanex.Data;
 using Fanex.Data.Repository;
 using Fanex.Logging;
 using Fanex.Logging.Sentry.RavenClient;
+using Microsoft.AspNetCore.Builder;
 using ONEbook.UM.DependencyInjection;
 using ONEbook.UM.Services;
 using SharpRaven;
