@@ -57,13 +57,15 @@ public class RabbitBus(ILogService logService) : IRabbitBus
         return result;
     }
 
+    public async Task<QueueStats> GetQueueStatsAsync(string queueName)
+    {
+        return await advancedBus.GetQueueStatsAsync(queueName);
+    }
+
     public async Task RegisterQueueAsync()
     {
-        const string exchangeName = $"{Core.Constants.QueueIdentify}.exchange";
-        const string queueName = $"{Core.Constants.QueueIdentify}.queue";
-        const string routingKey = $"{Core.Constants.QueueIdentify}.routing";
-        exchange = await advancedBus.ExchangeDeclareAsync(exchangeName, ExchangeType.Direct);
-        var queue = await advancedBus!.QueueDeclareAsync(queueName, c =>
+        exchange = await advancedBus.ExchangeDeclareAsync(Constants.MainExchangeName, ExchangeType.Direct);
+        var queue = await advancedBus!.QueueDeclareAsync(Constants.MainQueueName, c =>
         {
             c.AsDurable(true);
             c.AsExclusive(false);
@@ -71,7 +73,7 @@ public class RabbitBus(ILogService logService) : IRabbitBus
             c.WithArgument("x-queue-type", "quorum");
         });
 
-        await advancedBus.BindAsync(exchange.Value, queue, routingKey);
+        await advancedBus.BindAsync(exchange.Value, queue, Constants.RoutingKey);
     }
 
     public async Task<Dictionary<string, object>> GetConnectionInfoAsync()
@@ -95,6 +97,16 @@ public class RabbitBus(ILogService logService) : IRabbitBus
                     info["ConnectionActive"] = true;
                     info["ConnectionType"] = "EasyNetQ.IAdvancedBus";
                 }
+
+                var mainQueueStatus = await advancedBus.GetQueueStatsAsync(Constants.MainQueueName);
+                var retryQueueStatus = await advancedBus.GetQueueStatsAsync(Constants.RetryQueueName);
+                var errorQueueStatus = await advancedBus.GetQueueStatsAsync(Constants.ErrorQueueName);
+                info["mainQueueStatus.ConsumersCount"] = mainQueueStatus.ConsumersCount;
+                info["mainQueueStatus.MessagesCount"] = mainQueueStatus.MessagesCount;
+                info["retryQueueStatus.ConsumersCount"] = retryQueueStatus.ConsumersCount;
+                info["retryQueueStatus.MessagesCount"] = retryQueueStatus.MessagesCount;
+                info["errorQueueStatus.ConsumersCount"] = errorQueueStatus.ConsumersCount;
+                info["errorQueueStatus.MessagesCount"] = errorQueueStatus.MessagesCount;
             }
             catch (Exception ex)
             {

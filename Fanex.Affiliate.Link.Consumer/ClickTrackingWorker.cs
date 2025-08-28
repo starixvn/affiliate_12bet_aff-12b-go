@@ -25,14 +25,6 @@ public sealed class ClickTrackingWorker(
     private Exchange errorExchange;
     private Queue mainQueue;
 
-    private readonly string mainExchangeName = $"{Constants.QueueIdentify}.exchange";
-    private readonly string retryExchangeName = $"{Constants.QueueIdentify}.retry.exchange";
-    private readonly string errorExchangeName = $"{Constants.QueueIdentify}.error.exchange";
-    private readonly string mainQueueName = $"{Constants.QueueIdentify}.queue";
-    private readonly string retryQueueName = $"{Constants.QueueIdentify}.retry.queue";
-    private readonly string errorQueueName = $"{Constants.QueueIdentify}.error.queue";
-    private readonly string routingKey = $"{Constants.QueueIdentify}.routing";
-
     public void EnableMaintenanceMode()
     {
         lock (maintenanceLock)
@@ -96,73 +88,87 @@ public sealed class ClickTrackingWorker(
             try
             {
                 logService.LogFileMessage($"[Consumer] Processing: {message.Body.ToString()}");
-                await databaseService.InsertClickInfo(message.Body);
+                var result = await databaseService.InsertClickInfo(message.Body);
+                if (!result.IsSuccessful)
+                {
+                    var errMessage = await ProcessMessageWhenError(message);
+                    await logService.SentryErrorAsync($"{ errMessage } - { result.ErrorMessage }");
+                }
+
                 await Task.FromResult(AckStrategies.Ack);
             }
             catch (Exception ex)
             {
                 logService.LogFileMessage("Maintenance mode active – message retained in queue.");
-                var headers = message.Properties.Headers;
-                var retry = headers.TryGetValue("x-retry", out var retryObj) && retryObj is not null
-                    ? Convert.ToInt32(retryObj)
-                    : 0;
-
-                retry++;
-
-                if (retry > maxRetryCount)
-                {
-                    await logService.SentryErrorAsync($"Moving message to dead-letter queue after {retry} retries.", ex);
-                    var errorMsg = new Message<ClickTrackingEvent>(message.Body);
-                    errorMsg.Properties.Headers["x-retry"] = retry;
-                    await bus.Advanced.PublishAsync(errorExchange, routingKey, false, errorMsg);
-                }
-                else
-                {
-                    await logService.SentryErrorAsync($"Retrying message. Attempt {retry}.", ex);
-                    var retryMsg = new Message<ClickTrackingEvent>(message.Body);
-                    retryMsg.Properties.Headers["x-retry"] = retry;
-                    await bus.Advanced.PublishAsync(retryExchange, routingKey, false, retryMsg);
-                }
-
+                var errMessage = await ProcessMessageWhenError(message);
+                await logService.SentryErrorAsync(errMessage, ex);
                 await Task.FromResult(AckStrategies.Ack);
             }
         });
+    }
+
+    private async Task<string> ProcessMessageWhenError(IMessage<ClickTrackingEvent> message)
+    {
+        var errorMessage = string.Empty;
+        var headers = message.Properties.Headers;
+        var retry = headers.TryGetValue("x-retry", out var retryObj) && retryObj is not null
+            ? Convert.ToInt32(retryObj)
+            : 0;
+
+        retry++;
+
+        if (retry > maxRetryCount)
+        {
+            errorMessage = $"Moving message to dead-letter queue after {retry} retries.";
+            var errorMsg = new Message<ClickTrackingEvent>(message.Body);
+            errorMsg.Properties.Headers["x-retry"] = retry;
+            await bus.Advanced.PublishAsync(errorExchange, Constants.RoutingKey, false, errorMsg);
+        }
+        else
+        {
+            errorMessage = $"Retrying message. Attempt {retry}.";
+            var retryMsg = new Message<ClickTrackingEvent>(message.Body);
+            retryMsg.Properties.Headers["x-retry"] = retry;
+            await bus.Advanced.PublishAsync(retryExchange, Constants.RoutingKey, false, retryMsg);
+        }
+
+        return errorMessage;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Delay(InitialDelayMilliseconds, stoppingToken).ConfigureAwait(false);
         // Setup exchanges and queues
-        var mainExchange = await bus.Advanced.ExchangeDeclareAsync(mainExchangeName, ExchangeType.Direct);
-        retryExchange = await bus.Advanced.ExchangeDeclareAsync(retryExchangeName, ExchangeType.Direct);
-        errorExchange = await bus.Advanced.ExchangeDeclareAsync(errorExchangeName, ExchangeType.Direct);
+        var mainExchange = await bus.Advanced.ExchangeDeclareAsync(Constants.MainExchangeName, ExchangeType.Direct);
+        retryExchange = await bus.Advanced.ExchangeDeclareAsync(Constants.RetryExchangeName, ExchangeType.Direct);
+        errorExchange = await bus.Advanced.ExchangeDeclareAsync(Constants.ErrorExchangeName, ExchangeType.Direct);
 
-        mainQueue = await bus.Advanced.QueueDeclareAsync(mainQueueName, c => c
+        mainQueue = await bus.Advanced.QueueDeclareAsync(Constants.MainQueueName, c => c
             .AsDurable(true)
             .AsExclusive(false)
             .AsAutoDelete(false)
             .WithArgument("x-queue-type", "quorum")
         );
 
-        var retryQueue = await bus.Advanced.QueueDeclareAsync(retryQueueName, c => c
+        var retryQueue = await bus.Advanced.QueueDeclareAsync(Constants.RetryQueueName, c => c
             .AsDurable(true)
             .AsExclusive(false)
             .AsAutoDelete(false)
             .WithArgument("x-queue-type", "quorum")
-            .WithArgument("x-dead-letter-exchange", mainExchangeName)
+            .WithArgument("x-dead-letter-exchange", Constants.MainExchangeName)
             .WithArgument("x-message-ttl", timeToReQueue)
         );
 
-        var errorQueue = await bus.Advanced.QueueDeclareAsync(errorQueueName, c => c
+        var errorQueue = await bus.Advanced.QueueDeclareAsync(Constants.ErrorQueueName, c => c
             .AsDurable(true)
             .AsExclusive(false)
             .AsAutoDelete(false)
             .WithArgument("x-queue-type", "quorum")
         );
-
-        await bus.Advanced.BindAsync(mainExchange, mainQueue, routingKey);
-        await bus.Advanced.BindAsync(retryExchange, retryQueue, routingKey);
-        await bus.Advanced.BindAsync(errorExchange, errorQueue, routingKey);
+        
+        await bus.Advanced.BindAsync(mainExchange, mainQueue, Constants.RoutingKey);
+        await bus.Advanced.BindAsync(retryExchange, retryQueue, Constants.RoutingKey);
+        await bus.Advanced.BindAsync(errorExchange, errorQueue, Constants.RoutingKey);
 
         StartConsumer();
 

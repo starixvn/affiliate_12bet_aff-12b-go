@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Fanex.Affiliate.Link.Consumer;
 using Fanex.Affiliate.Link.Core;
+using Fanex.Affiliate.Link.Core.Commands;
 using Fanex.Affiliate.Link.Core.Models;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using FluentAssertions;
@@ -119,7 +120,7 @@ public class ClickTrackingRedisStorageWorkerTests
             .ReturnsAsync((ClickTrackingEvent)null);
 
         _mockDatabaseService.Setup(x => x.InsertClickInfo(It.IsAny<ClickTrackingEvent>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(new CommandResult { ErrorCode = 0, ErrorMessage = string.Empty });
 
         // Act
         var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 

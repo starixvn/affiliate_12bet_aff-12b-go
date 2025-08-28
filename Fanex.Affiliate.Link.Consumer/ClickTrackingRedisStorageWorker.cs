@@ -22,7 +22,7 @@ public sealed class ClickTrackingRedisStorageWorker(
     }
 
     private async Task StartConsumer()
-     {
+    {
         if (isRunning || IsCurrentlyUnderMaintenance())
         {
             return;
@@ -33,23 +33,28 @@ public sealed class ClickTrackingRedisStorageWorker(
         {
             while (true)
             {
-                var clickTrackingEvent = await redisService.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName);
-                if (clickTrackingEvent != null)
+                var clickTrackingEvent = await redisService.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName).ConfigureAwait(false);
+                if (clickTrackingEvent == null)
                 {
-                    await databaseService.InsertClickInfo(clickTrackingEvent);
+                    break;
                 }
-                else
+
+                var result = await databaseService.InsertClickInfo(clickTrackingEvent).ConfigureAwait(false);
+                if (!result.IsSuccessful)
                 {
+                    await logService.SentryErrorAsync("InsertClickInfo failed", new Exception(result.ErrorMessage)).ConfigureAwait(false);
                     break;
                 }
             }
         }
         catch (Exception ex)
         {
-            await logService.SentryErrorAsync(ex);
+            await logService.SentryErrorAsync(ex).ConfigureAwait(false);
         }
-
-        isRunning = false;
+        finally
+        {
+            isRunning = false;
+        }
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

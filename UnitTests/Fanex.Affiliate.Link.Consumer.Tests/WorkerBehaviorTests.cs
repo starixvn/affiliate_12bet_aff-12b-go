@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using EasyNetQ;
 using Fanex.Affiliate.Link.Core;
+using Fanex.Affiliate.Link.Core.Commands;
 using Fanex.Affiliate.Link.Core.Models;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using FluentAssertions;
@@ -37,7 +38,7 @@ public class WorkerBehaviorTests
         // First call throws exception, second call succeeds
         mockDatabaseService.SetupSequence(x => x.InsertClickInfo(It.IsAny<ClickTrackingEvent>()))
             .ThrowsAsync(new Exception("Database timeout"))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(new CommandResult { ErrorCode = 0, ErrorMessage = string.Empty });
 
         var worker = new ClickTrackingRedisStorageWorker(
             mockMaintenanceService.Object,

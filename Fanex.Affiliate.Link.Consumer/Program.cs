@@ -7,7 +7,6 @@ using Fanex.Data;
 using Fanex.Data.Repository;
 using Fanex.Logging;
 using Fanex.Logging.Sentry.RavenClient;
-using Microsoft.AspNetCore.Builder;
 using ONEbook.UM.DependencyInjection;
 using ONEbook.UM.Services;
 using SharpRaven;
@@ -16,6 +15,7 @@ using StackExchange.Redis;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHostedService<ClickTrackingWorker>();
+builder.Services.AddHostedService<ClickTrackingDLQWorker>();
 builder.Services.AddHostedService<ClickTrackingRedisStorageWorker>();
 var rabbitMqConnectionString = builder.Configuration.GetValue<string>("RabbitMQConnectionString");
 builder.Services.AddHttpClient();
@@ -49,13 +49,32 @@ DbSettingProviderManager
     .Run();
 
 var host = builder.Build();
-host.MapGet("/", () => "Affiliate.Link.Consumer running!");
-host.MapGet("/sentry", async () =>
-{
-    var logService = host.Services.GetRequiredService<Fanex.Logging.ILogger>();
-    await logService.ErrorAsync("Consumer Test Sentry");
 
-    return "Consumer Test sentry!";
-});
+RouteToAction(host);
 
 host.Run();
+
+static void RouteToAction(WebApplication host)
+{
+    host.MapGet("/", () => "Affiliate.Link.Consumer running!");
+    host.MapGet("/sentry", async () =>
+    {
+        var logService = host.Services.GetRequiredService<Fanex.Logging.ILogger>();
+        await logService.ErrorAsync("Consumer Test Sentry");
+
+        return "Consumer Test sentry!";
+    });
+    host.MapGet("/OnDQLQueueConsumer", async () =>
+    {
+        var redisService = host.Services.GetRequiredService<IRedisService>();
+        var result = await redisService.SetAsync(Constants.TurnOnErrorQueueConsumer, true);
+        return result;
+    });
+
+    host.MapGet("/OffDQLQueueConsumer", async () =>
+    {
+        var redisService = host.Services.GetRequiredService<IRedisService>();
+        var result = await redisService.SetAsync(Constants.TurnOnErrorQueueConsumer, false);
+        return result;
+    });
+}

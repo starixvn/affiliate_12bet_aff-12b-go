@@ -1,4 +1,5 @@
 ﻿using Fanex.Affiliate.Link.Commands;
+using Fanex.Affiliate.Link.Core.Commands;
 using Fanex.Affiliate.Link.Core.Models;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using Fanex.Data.Repository;
@@ -7,7 +8,7 @@ namespace Fanex.Affiliate.Link.Core.Services;
 
 public class DatabaseService(IDynamicRepository dynamicRepository) : IDatabaseService
 {
-    public async Task InsertClickInfo(ClickTrackingEvent clickTrackingEvent)
+    public async Task<CommandResult> InsertClickInfo(ClickTrackingEvent clickTrackingEvent)
     {
         var command = new ClickTrackingEventCommand
         {
@@ -35,5 +36,10 @@ public class DatabaseService(IDynamicRepository dynamicRepository) : IDatabaseSe
         };
 
         await dynamicRepository.ExecuteAsync(command);
+        return new CommandResult
+        {
+            ErrorCode = command.ErrCode,
+            ErrorMessage = command.ErrMsg
+        };
     }
 }

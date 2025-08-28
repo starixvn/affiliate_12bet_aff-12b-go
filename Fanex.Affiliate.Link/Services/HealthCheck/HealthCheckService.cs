@@ -1,5 +1,6 @@
 namespace Fanex.Affiliate.Link.Services.HealthCheck
 {
+    using System.Diagnostics;
     using Constants;
     using Fanex.Affiliate.Link.Core.Services.Interfaces;
     using Fanex.Affiliate.Link.Criterias;
@@ -7,7 +8,6 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
     using Fanex.Data.Repository;
     using Models.HealthCheck;
     using ONEbook.UM.Services;
-    using System.Diagnostics;
 
     /// <summary>
     /// Comprehensive health check service implementation
@@ -133,6 +133,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
             {
                 var testKey = $"health_check_{Guid.NewGuid()}";
                 var testValue = $"test_{DateTimeHelper.ServerTime:yyyyMMddHHmmss}";
+                var clickIdFromCache = await _redisService.StringGetAsync(CacheKey.CLICKID);
 
                 await _redisService.SetAsync(testKey, testValue, TimeSpan.FromSeconds(30));
                 var retrievedValue = await _redisService.GetAsync<string>(testKey);
@@ -151,7 +152,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                         /* Ignore cleanup errors */
                     }
 
-                    return ComponentHealth.Healthy(RedisComponentName,
+                    return ComponentHealth.Healthy($"Redis  - ClickId - {clickIdFromCache}",
                         $"Redis cache responding correctly (response time: {stopwatch.ElapsedMilliseconds}ms)", stopwatch.Elapsed);
                 }
 
