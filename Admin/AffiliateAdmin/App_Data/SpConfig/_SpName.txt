@@ -1,9 +1,0 @@
-﻿
-
-
-// Generated helper templates
-// Generated items
-// D:\Nexdev\affiliate-12bet\Admin\AffiliateAdmin\App_Data\SpConfig\SpName.12b-admin.klprod.xml
-// D:\Nexdev\affiliate-12bet\Admin\AffiliateAdmin\App_Data\SpConfig\SpName.12b-admin.local.xml
-// D:\Nexdev\affiliate-12bet\Admin\AffiliateAdmin\App_Data\SpConfig\SpName.12b-admin.uat.xml
-// D:\Nexdev\affiliate-12bet\Admin\AffiliateAdmin\App_Data\SpConfig\SpName.xml

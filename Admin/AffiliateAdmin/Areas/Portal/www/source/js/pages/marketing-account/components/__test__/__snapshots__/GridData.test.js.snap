@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`marketing-account - components - GridData should render correctly 1`] = `""`;
-
-exports[`marketing-account - components - GridData should render when canAddAffMktAccount is false 1`] = `""`;

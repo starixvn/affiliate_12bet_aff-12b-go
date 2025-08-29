@@ -1,8 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`aff-note - components - AppContainer render correctly 1`] = `
-<Fragment>
-  <Connect(NoteContent) />
-  <Connect(NoteModificationForm) />
-</Fragment>
-`;

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Functions SiteId="2000003" SiteName="12B">
+  <Function Name="Aff-Link">
+    <Setting Key="Aff_User_GeneralInfo_Sel" SpName="Aff_User_GeneralInfo_Sel" DbName="DBAFF12B.Affiliate_12B.wsv_afinetv" Plain="0" />
+    <Setting Key="Aff_ClickStatistics_Ins" SpName="Aff_ClickStatistics_Ins" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" Plain="0" />
+    <Setting Key="Aff_AffiliateUser_ExtraUserInfoSel" SpName="Aff_AffiliateUser_ExtraUserInfoSel" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" Plain="0" />
+    <Setting Key="Aff_User_AffMediaLink_CheckExistedTracking" SpName="Aff_User_AffMediaLink_CheckExistedTracking" DbName="DBAFF12B.Affiliate_12B.wsv_afinetv" />
+    <Setting Key="Aff_User_AffMediaLink_ToggleChannel" SpName="Aff_User_AffMediaLink_ToggleChannel" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
+    <Setting Key="Aff_Market_Sel" SpName="Aff_Market_Sel" DbName="DBAFF12B.Affiliate_12B.wsv_afinetv" />
+	  <Setting Key="Aff_ClickStatistics_BulkCache" SpName="Aff_ClickStatistics_BulkCache_uat3" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
+	  <Setting Key="Aff_ClickStatistics_MaxClickId_Sel" SpName="Aff_ClickStatistics_MaxClickId_Sel" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
+	  <Setting Key="Aff_ClickStatistics_RedirectPage_Sel" SpName="Aff_ClickStatistics_RedirectPage_Sel_uat3" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
+  </Function>
+</Functions>

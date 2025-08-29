@@ -1,8 +1,0 @@
-﻿.news-letter-content {
-  margin: auto;
-  max-width: 600px; }
-  @media (max-width: 630px) {
-    .news-letter-content table {
-      display: inline; }
-    .news-letter-content #Table_01 img[width="600"] {
-      max-width: 100% !important; } }

@@ -1,4 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="SonarQube - Sparta / 12betAFF Nexcel CSharp" ToolsVersion="14.0">
-  <Include Path="..\sonarqube\12betaffcsharp.ruleset" Action="Default" />
-</RuleSet>

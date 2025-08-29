@@ -1,9 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`administrator - common - components - InsertUpdateAccForm  render correctly with insert 1`] = `""`;
-
-exports[`administrator - common - components - InsertUpdateAccForm  render correctly with insert existed Account 1`] = `""`;
-
-exports[`administrator - common - components - InsertUpdateAccForm  render correctly with not show popup 1`] = `""`;
-
-exports[`administrator - common - components - InsertUpdateAccForm  render correctly with update 1`] = `""`;

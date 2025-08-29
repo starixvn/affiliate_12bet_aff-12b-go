@@ -1,9 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`AppLayout  render - content match with snapshot 1`] = `
-<div
-  className="app-container"
->
-  &lt;h1&gt;App Layout&lt;/h1&gt;
-</div>
-`;

@@ -1,8 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`customer member - components - AppContainer render correctly 1`] = `
-<AppLayout>
-  <Connect(Filter) />
-  <Connect(Content) />
-</AppLayout>
-`;
