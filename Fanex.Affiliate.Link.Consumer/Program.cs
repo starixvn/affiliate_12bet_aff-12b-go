@@ -15,9 +15,8 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHostedService<ClickTrackingWorker>();
-builder.Services.AddHostedService<ClickTrackingDLQWorker>();
-builder.Services.AddHostedService<ClickTrackingRedisStorageWorker>();
+RegisterWorker(builder);
+
 var rabbitMqConnectionString = builder.Configuration.GetValue<string>("RabbitMQConnectionString");
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton(RabbitHutch.CreateBus(rabbitMqConnectionString));
@@ -78,4 +77,19 @@ static void RouteToAction(WebApplication host)
         var result = await redisService.SetAsync(Constants.TurnOnErrorQueueConsumer, false);
         return result;
     });
+}
+
+static void RegisterWorker(WebApplicationBuilder builder)
+{
+    RegisterWorkerIfEnabled<ClickTrackingDLQWorker>(builder, "JobSettings:ClickTrackingDLQWorker");
+    RegisterWorkerIfEnabled<ClickTrackingRedisStorageWorker>(builder, "JobSettings:ClickTrackingRedisStorageWorker");
+    RegisterWorkerIfEnabled<ClickTrackingWorker>(builder, "JobSettings:ClickTrackingWorker");
+}
+
+static void RegisterWorkerIfEnabled<T>(WebApplicationBuilder builder, string configKey) where T : class, IHostedService
+{
+    if (bool.TryParse(builder.Configuration[configKey], out var isEnabled) && isEnabled)
+    {
+        builder.Services.AddHostedService<T>();
+    }
 }
