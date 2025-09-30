@@ -61,7 +61,6 @@ static void RouteToAction(WebApplication host)
     {
         var logService = host.Services.GetRequiredService<Fanex.Logging.ILogger>();
         await logService.ErrorAsync("Consumer Test Sentry");
-
         return "Consumer Test sentry!";
     });
     host.MapGet("/OnDQLQueueConsumer", async () =>
