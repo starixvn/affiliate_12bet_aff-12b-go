@@ -17,7 +17,7 @@ public class LanguageTests
 
         // Assert
         supportedLanguages.Should().ContainKeys("en", "bd", "hien", "hitg", "id", "jp", "ko", "th", "vn", "cs", "mycs");
-        supportedLanguages.Should().HaveCount(11);
+        supportedLanguages.Should().HaveCount(18);
     }
 
     [Fact]

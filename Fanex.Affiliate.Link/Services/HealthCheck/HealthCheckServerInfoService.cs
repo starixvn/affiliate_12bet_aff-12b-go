@@ -3,6 +3,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
     using Extensions;
     using Fanex.Affiliate.Link.Constants;
     using Fanex.Affiliate.Link.Helpers;
+    using Newtonsoft.Json;
     using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Net;
@@ -137,7 +138,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
                     foreach (var item in context.Request.Headers.Where(i => i.Key.Contains(HeaderKey.X, StringComparison.OrdinalIgnoreCase)
                         || i.Key.Contains(HeaderKey.CF, StringComparison.OrdinalIgnoreCase)))
                     {
-                        result.Add($" - {item.Key}", item.Value.ToString());
+                        result.Add($" - {item.Key}", JsonConvert.SerializeObject(item.Value));
                     }
                 }
             }

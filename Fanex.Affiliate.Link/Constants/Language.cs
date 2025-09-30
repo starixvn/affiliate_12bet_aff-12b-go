@@ -10,16 +10,23 @@
         public static readonly IReadOnlyDictionary<string, string> SupportedLanguageCodes = new Dictionary<string, string>
         {
             ["en"] = ENGLISH_SHORTED_CODE,
+            ["mycs"] = CHINA_SHORTED_CODE,
             ["bd"] = BENGALI_SHORTED_CODE,
+            ["bnen"] = ENGLISH_SHORTED_CODE,
             ["hien"] = ENGLISH_SHORTED_CODE,
             ["hitg"] = INDIA_SHORTED_CODE,
             ["id"] = "id",
+            ["iden"] = ENGLISH_SHORTED_CODE,
             ["jp"] = ENGLISH_SHORTED_CODE,
+            ["jpen"] = ENGLISH_SHORTED_CODE,
             ["ko"] = "ko",
+            ["kren"] = ENGLISH_SHORTED_CODE,
             ["th"] = "th",
+            ["then"] = ENGLISH_SHORTED_CODE,
             ["vn"] = "vn",
+            ["vnen"] = ENGLISH_SHORTED_CODE,
             ["cs"] = CHINA_SHORTED_CODE,
-            ["mycs"] = CHINA_SHORTED_CODE,
+            ["csen"] = ENGLISH_SHORTED_CODE,
         };
 
         public static readonly IReadOnlyDictionary<string, string> RemovedLanguageCodes = new Dictionary<string, string>
