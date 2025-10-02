@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using Fanex.Affiliate.Link.Constants;
     using Fanex.Affiliate.Link.Core.Models;
@@ -68,6 +69,21 @@
             {
                 await logService.SentryErrorAsync(ex).ConfigureAwait(false);
                 return StatusCode(HttpStatusInternalServerError, $"An error occurred while syncing max click id: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> RefreshCacheData()
+        {
+            try
+            {
+                var result = await trackingSystemService.GetMasterInfoFromDatabase();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                await logService.SentryErrorAsync(ex).ConfigureAwait(false);
+                return StatusCode(HttpStatusInternalServerError, $"An error occurred while Refresh Cache: {ex.Message}");
             }
         }
 
@@ -259,6 +275,7 @@
 
         private ValidateResult ValidateLinkDomain(ClickTrackingEvent clickTrackingEvent, MasterInfoValidation masterInfoValidation)
         {
+            logService.LogFileMessage("start ValidateLinkDomain");
             if (clickTrackingEvent == null || masterInfoValidation == null)
             {
                 return new ValidateResult
@@ -273,6 +290,7 @@
 
             if (affDeal == null)
             {
+                logService.LogFileMessage("ValidateLinkDomain: affDeal is null");
                 return new ValidateResult
                 {
                     IsValid = false,
@@ -287,6 +305,8 @@
 
             if (domain == null)
             {
+                logService.LogFileMessage($"ValidateLinkDomain: domain is null, AffDomain: {clickTrackingEvent.AffDomain}, LanguageCode: {clickTrackingEvent.LanguageCode}");
+                logService.LogFileMessage(JsonSerializer.Serialize(masterInfoValidation.DomainMappings));
                 return new ValidateResult
                 {
                     IsValid = false,
@@ -360,6 +380,7 @@
 
             if (domain is null)
             {
+                logService.LogFileMessage("ValidateLinkSpecialDomain: domain is null");
                 return new ValidateResult { IsValid = false, ErrorMessage = LinkIsInvalidMessage };
             }
 
