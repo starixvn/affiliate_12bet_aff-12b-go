@@ -52,26 +52,28 @@
         public async Task<MasterInfoValidation> GetMasterDataForValidateClicked()
         {
             const string cacheKey = CacheKey.MASTER_DATA;
-            var slidingExpirationTime = TimeSpan.FromSeconds(CacheDurationInSeconds);
             var masterInfoValidation = await redisService.GetAsync<MasterInfoValidation>(cacheKey);
+            masterInfoValidation ??= await GetMasterInfoFromDatabase();
+            return masterInfoValidation;
+        }
 
-            if (masterInfoValidation is null)
+        public async Task<MasterInfoValidation> GetMasterInfoFromDatabase()
+        {
+            const string cacheKey = CacheKey.MASTER_DATA;
+            var slidingExpirationTime = TimeSpan.FromSeconds(CacheDurationInSeconds);
+            var criteria = new GetMasterDataForValidateClickedCriteria();
+            var results = await dynamicRepository.FetchMultipleAsync<SpecialDomainMapping, DomainMapping, LanguageReference, AffiliateDeal, LandingPageSetting>(criteria);
+
+            var masterInfoValidation = new MasterInfoValidation
             {
-                var criteria = new GetMasterDataForValidateClickedCriteria();
-                var results = await dynamicRepository.FetchMultipleAsync<SpecialDomainMapping, DomainMapping, LanguageReference, AffiliateDeal, LandingPageSetting>(criteria);
+                SpecialDomainMappings = results.Item1,
+                DomainMappings = results.Item2,
+                LanguageReferences = results.Item3,
+                AffiliateDeals = results.Item4,
+                LandingPages = results.Item5
+            };
 
-                masterInfoValidation = new MasterInfoValidation
-                {
-                    SpecialDomainMappings = results.Item1,
-                    DomainMappings = results.Item2,
-                    LanguageReferences = results.Item3,
-                    AffiliateDeals = results.Item4,
-                    LandingPages = results.Item5
-                };
-
-                await redisService.SetAsync(cacheKey, masterInfoValidation, slidingExpirationTime);
-            }
-
+            await redisService.SetAsync(cacheKey, masterInfoValidation, slidingExpirationTime);
             return masterInfoValidation;
         }
 

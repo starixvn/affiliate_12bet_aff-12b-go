@@ -21,6 +21,8 @@
 
         Task<MasterInfoValidation> GetMasterDataForValidateClicked();
 
+        Task<MasterInfoValidation> GetMasterInfoFromDatabase();
+
         Task<long> GetClickId();
 
         Task<long> SyncMaxClickId(bool isSync);

@@ -37,7 +37,7 @@ public class RedisService: IRedisService
     {
         var redisValue = RedisTypeConverter.ToRedisValue(value);
         return await retryPolicy.ExecuteAsync(async () =>
-            await datatabse.StringSetAsync(key, redisValue));
+            await datatabse.StringSetAsync(key, redisValue, expireTime));
     }
 
     public async Task<T?> GetAsync<T>(string key)
@@ -106,7 +106,7 @@ public class RedisService: IRedisService
         var redisValue = RedisTypeConverter.ToRedisValue(value);
         return await retryPolicy.ExecuteAsync(async () =>
         {
-            return await datatabse.ListLeftPushAsync(key, redisValue);
+            return await datatabse.ListRightPushAsync(key, redisValue);
         });
     }
 
