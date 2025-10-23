@@ -245,6 +245,8 @@
             clickTrackingEvent.UpdatedTime = DateTimeHelper.GmtMinus4Now;
             clickTrackingEvent.RedirectLink = $"{clickTrackingEvent.RedirectLink}&clickId={clickId}";
 
+            var isExcluded = botDetectionService.IsBot(HttpContext);
+            clickTrackingEvent.IsExcluded = isExcluded;
             await trackingSystemService.PublishMessage(clickTrackingEvent).ConfigureAwait(false);
 
             var forwardQueryString = Request.QueryString.Value.ReplaceStr("?", "&");

@@ -95,20 +95,39 @@ public sealed class BotDetectionService (
         string userAgent = headers["User-Agent"].FirstOrDefault() ?? string.Empty;
         var botScore = CheckBotByUserAgent(userAgent);
 
+        CheckSecurityHeaders(headers, botScore);
+        CheckAcceptHeader(headers, botScore);
+        CheckRefererAndOrigin(headers, botScore);
+        CheckLanguageHeader(headers, botScore);
+
+        string clientIp = HttpContextHelper.GetClientIpAddress(context);
+        LogBotDetectionResult(botScore, clientIp, userAgent);
+
+        return botScore;
+    }
+
+    private static void CheckSecurityHeaders(IHeaderDictionary headers, BotScore botScore)
+    {
         bool hasSecHeaders = headers.ContainsKey("Sec-CH-UA") || headers.ContainsKey("Sec-Fetch-Site");
         if (!hasSecHeaders)
         {
             botScore.Score += 25;
             botScore.Reason += "[Missing Sec-*] ";
         }
+    }
 
+    private static void CheckAcceptHeader(IHeaderDictionary headers, BotScore botScore)
+    {
         string accept = headers["Accept"].FirstOrDefault() ?? "";
         if (!accept.Contains("text/html") && !accept.Contains("application/json"))
         {
             botScore.Score += 20;
             botScore.Reason += "[Weird Accept] ";
         }
+    }
 
+    private static void CheckRefererAndOrigin(IHeaderDictionary headers, BotScore botScore)
+    {
         string referer = headers["Referer"].FirstOrDefault() ?? "";
         string origin = headers["Origin"].FirstOrDefault() ?? "";
         if (string.IsNullOrWhiteSpace(referer) && string.IsNullOrWhiteSpace(origin))
@@ -116,16 +135,20 @@ public sealed class BotDetectionService (
             botScore.Score += 10;
             botScore.Reason += "[No Referer/Origin] ";
         }
+    }
 
+    private static void CheckLanguageHeader(IHeaderDictionary headers, BotScore botScore)
+    {
         string lang = headers["Accept-Language"].FirstOrDefault() ?? "";
         if (string.IsNullOrWhiteSpace(lang))
         {
             botScore.Score += 10;
             botScore.Reason += "[No Language] ";
         }
+    }
 
-        string clientIp = HttpContextHelper.GetClientIpAddress(context);
-
+    private void LogBotDetectionResult(BotScore botScore, string clientIp, string userAgent)
+    {
         if (botScore.Score >= thresholdBotScore)
         {
             botScore.IsBot = true;
@@ -136,8 +159,6 @@ public sealed class BotDetectionService (
         {
             logService.LogFileMessage($"Legit traffic: Score={botScore}, IP={clientIp}, UA={userAgent}");
         }
-
-        return botScore;
     }
 
 
@@ -183,11 +204,12 @@ public sealed class BotDetectionService (
             }
             else
             {
-                if (BOT_INDICATORS.Any(b => userAgent.ToLower().Contains(b)))
+                if (Array.Exists(BOT_INDICATORS, b => userAgent.ToLowerInvariant().Contains(b)))
                 {
                     botScore.Score += 40;
                     botScore.Reason += "[Suspicious UA] ";
                 }
+                // else: User agent doesn't match known bot patterns, no score adjustment needed
             }
         }
 
@@ -289,6 +311,10 @@ public sealed class BotDetectionService (
         else if (!isBot && clickStatistic.IsIsExcluded)
         {
             normalClicks.Add(clickStatistic.ClickId);
+        }
+        else
+        {
+            // Click state is already correct, no update needed
         }
     }
 }
