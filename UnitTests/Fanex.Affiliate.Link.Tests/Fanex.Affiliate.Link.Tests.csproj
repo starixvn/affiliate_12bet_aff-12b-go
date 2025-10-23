@@ -34,4 +34,8 @@
     <ProjectReference Include="..\..\Fanex.Affiliate.Link.Core\Fanex.Affiliate.Link.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Criterias\" />
+  </ItemGroup>
+
 </Project>

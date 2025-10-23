@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Text.Json;
     using System.Threading.Tasks;
+    using Fanex.Affiliate.Link.Attributes;
     using Fanex.Affiliate.Link.Constants;
     using Fanex.Affiliate.Link.Core.Models;
     using Fanex.Affiliate.Link.Core.Services.Interfaces;
@@ -27,6 +28,7 @@
         private readonly IMaintenanceService maintenanceService;
         private readonly IHttpContextService httpContextService;
         private readonly ILogService logService;
+        private readonly IBotDetectionService botDetectionService;
         private const string LinkIsInvalidMessage = "Oops! This link does not exist. Please reach out to the administrator if you need help.";
         private const string LinkIsIncorrectMessage = "Oops! This link is in an incorrect format. Please reach out to the administrator for assistance.";
         private const string LinkIsOutdatedMessage = "Oops! This link is using an outdated format. Please contact the administrator to get it updated.";
@@ -39,6 +41,7 @@
             IMaintenanceService maintenanceService,
             IConfiguration configuration,
             IHttpContextService httpContextService,
+            IBotDetectionService botDetectionService,
             ILogService logService)
         {
             this.trackingSystemService = trackingSystemService ?? throw new ArgumentNullException(nameof(trackingSystemService));
@@ -46,6 +49,7 @@
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             this.httpContextService = httpContextService ?? throw new ArgumentNullException(nameof(httpContextService));
             this.logService = logService ?? throw new ArgumentNullException(nameof(logService));
+            this.botDetectionService = botDetectionService ?? throw new ArgumentNullException(nameof(botDetectionService));
             isRemovePortFromUrl = this.configuration["AppSettings:RemovePortFromUrl"].MatchWith("1");
         }
 
@@ -58,6 +62,39 @@
         public IActionResult PageNotFound() => View();
 
         [HttpGet]
+        [TokenAuth]
+        public async Task<IActionResult> CheckBot(string userAgent)
+        {
+            try
+            {
+                var isBot = botDetectionService.DetectBotFromUserAgent(userAgent);
+                return Ok(isBot);
+            }
+            catch (Exception ex)
+            {
+                await logService.SentryErrorAsync(ex).ConfigureAwait(false);
+                return StatusCode(HttpStatusInternalServerError, $"An error occurred while syncing max click id: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [TokenAuth]
+        public async Task<IActionResult> DetectBot(DateTime fromDate, DateTime toDate)
+        {
+            try
+            {
+                await botDetectionService.DetectBot(fromDate, toDate);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                await logService.SentryErrorAsync(ex).ConfigureAwait(false);
+                return StatusCode(HttpStatusInternalServerError, $"An error occurred while syncing max click id: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [TokenAuth]
         public async Task<IActionResult> SyncMaxClickId(bool isSync = true)
         {
             try
@@ -73,6 +110,7 @@
         }
 
         [HttpGet]
+        [TokenAuth]
         public async Task<IActionResult> RefreshCacheData()
         {
             try

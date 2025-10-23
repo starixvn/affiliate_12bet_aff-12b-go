@@ -26,6 +26,7 @@ public class HomeControllerTests
     private readonly Mock<IMaintenanceService> _maintenanceMock;
     private readonly Mock<IHttpContextService> _httpContextMock;
     private readonly Mock<ILogService> _logServiceMock;
+    private readonly Mock<IBotDetectionService> _botDetectionServiceMock;
     private readonly IConfiguration _config;
     private readonly HomeController _controller;
 
@@ -65,6 +66,7 @@ public class HomeControllerTests
             _maintenanceMock.Object,
             _config,
             _httpContextMock.Object,
+            _botDetectionServiceMock.Object,
             _logServiceMock.Object)
         {
             ControllerContext = new ControllerContext
@@ -468,6 +470,7 @@ public class HomeControllerTests
             _maintenanceMock.Object,
             _config,
             _httpContextMock.Object,
+            _botDetectionServiceMock.Object,
             _logServiceMock.Object)
         {
             ControllerContext = new ControllerContext
@@ -545,6 +548,7 @@ public class HomeControllerTests
             _maintenanceMock.Object,
             _config,
             _httpContextMock.Object,
+            _botDetectionServiceMock.Object,
             _logServiceMock.Object);
 
         action.Should().Throw<ArgumentNullException>()
@@ -559,6 +563,7 @@ public class HomeControllerTests
             null!,
             _config,
             _httpContextMock.Object,
+            _botDetectionServiceMock.Object,
             _logServiceMock.Object);
 
         action.Should().Throw<ArgumentNullException>()
@@ -573,6 +578,7 @@ public class HomeControllerTests
             _maintenanceMock.Object,
             null!,
             _httpContextMock.Object,
+            _botDetectionServiceMock.Object,
             _logServiceMock.Object);
 
         action.Should().Throw<ArgumentNullException>()
@@ -587,6 +593,7 @@ public class HomeControllerTests
             _maintenanceMock.Object,
             _config,
             null!,
+            _botDetectionServiceMock.Object,
             _logServiceMock.Object);
 
         action.Should().Throw<ArgumentNullException>()
@@ -601,6 +608,7 @@ public class HomeControllerTests
             _maintenanceMock.Object,
             _config,
             _httpContextMock.Object,
+            _botDetectionServiceMock.Object,
             null!);
 
         action.Should().Throw<ArgumentNullException>()

@@ -1,0 +1,294 @@
+﻿using DeviceDetectorNET;
+using Fanex.Affiliate.Link.Commands;
+using Fanex.Affiliate.Link.Core.Helpers;
+using Fanex.Affiliate.Link.Core.Models;
+using Fanex.Affiliate.Link.Core.Services.Interfaces;
+using Fanex.Affiliate.Link.Criterias;
+using Fanex.Data.Repository;
+using Microsoft.AspNetCore.Http;
+using NetCrawlerDetect;
+
+namespace Fanex.Affiliate.Link.Core.Services;
+
+public sealed class BotDetectionService (
+    IDynamicRepository dynamicRepository,
+    ILogService logService
+    ) : IBotDetectionService
+{
+    private const int thresholdBotScore = 60;
+    private const int thresholdBotScore2 = 40;
+    private static readonly string[] BOT_INDICATORS = new[]
+    {
+         "Twitterbot",
+        "SkypeUriPreview",
+        "Slackbot",
+        "WhatsApp",
+        "TelegramBot",
+        "facebookexternalhit",
+        "meta-externalagent",
+        "meta-externalads",
+        "Instagram",
+        "Slurp",
+        "YandexBot",
+        "Discordbot",
+        "LinkedInBot",
+        "Pinterestbot",
+        "Googlebot",
+        "Google-InspectionTool",
+        "AdsBot",
+        "Mediapartners-Google",
+        "bingbot",
+        "AdIdxBot",
+        "MSNBot",
+        "ZaloPreviewBot",
+        "Viberbot",
+        "redditbot",
+        "TiktokBot",
+        "Applebot",
+        "Dalvik",
+        "bitlybot",
+        "Telegram-Android",
+        "CCBot",
+        "crawler",
+        "ELinks",
+        "okhttp",
+        "python-requests",
+        "WordPress",
+        "Owler",
+        ".NET Framework",
+        "axios",
+        "Go-http-client",
+        "GuzzleHttp/7",
+        "Java-http-client",
+        "spider",
+        "scrapy",
+        "node-fetch",
+        "httpclient",
+        "wget",
+        "curl",
+        "aiohttp",
+        "urllib",
+        "libwww",
+        "feedfetcher",
+        "bingpreview",
+        "ahrefs",
+        "semrush",
+        "mj12bot",
+        "lighthouse",
+        "gtmetrix",
+        "uptimerobot",
+        "feedly",
+        "duckduckbot",
+        "petalbot",
+        "sogou",
+        "censysinspect",
+        "zoominfo",
+        "similarweb",
+        "netcraft",
+        "linkfluence",
+        "bot"
+    };
+
+    private BotScore GetBotScore(HttpContext context)
+    {
+        var headers = context.Request.Headers;
+        string userAgent = headers["User-Agent"].FirstOrDefault() ?? string.Empty;
+        var botScore = CheckBotByUserAgent(userAgent);
+
+        bool hasSecHeaders = headers.ContainsKey("Sec-CH-UA") || headers.ContainsKey("Sec-Fetch-Site");
+        if (!hasSecHeaders)
+        {
+            botScore.Score += 25;
+            botScore.Reason += "[Missing Sec-*] ";
+        }
+
+        string accept = headers["Accept"].FirstOrDefault() ?? "";
+        if (!accept.Contains("text/html") && !accept.Contains("application/json"))
+        {
+            botScore.Score += 20;
+            botScore.Reason += "[Weird Accept] ";
+        }
+
+        string referer = headers["Referer"].FirstOrDefault() ?? "";
+        string origin = headers["Origin"].FirstOrDefault() ?? "";
+        if (string.IsNullOrWhiteSpace(referer) && string.IsNullOrWhiteSpace(origin))
+        {
+            botScore.Score += 10;
+            botScore.Reason += "[No Referer/Origin] ";
+        }
+
+        string lang = headers["Accept-Language"].FirstOrDefault() ?? "";
+        if (string.IsNullOrWhiteSpace(lang))
+        {
+            botScore.Score += 10;
+            botScore.Reason += "[No Language] ";
+        }
+
+        string clientIp = HttpContextHelper.GetClientIpAddress(context);
+
+        if (botScore.Score >= thresholdBotScore)
+        {
+            botScore.IsBot = true;
+            string level = botScore.Score >= 80 ? "HIGH" : "MEDIUM";
+            logService.LogFileMessage($"Bot detected ({level}): Score={botScore}, Reason={botScore.Reason.Trim()}, IP={clientIp}, UA={userAgent}");
+        }
+        else
+        {
+            logService.LogFileMessage($"Legit traffic: Score={botScore}, IP={clientIp}, UA={userAgent}");
+        }
+
+        return botScore;
+    }
+
+
+    public bool IsBot(HttpContext context)
+    {
+        var botScore = GetBotScore(context);
+        if (botScore.IsBot)
+        {
+            return true;
+        }
+
+        string userAgent = context.Request.Headers["User-Agent"].FirstOrDefault() ?? string.Empty;
+        return DetectBotByThirdParty(userAgent);
+    }
+
+    public bool DetectBotFromUserAgent(string userAgent)
+    {
+        var botScore = CheckBotByUserAgent(userAgent);
+        if (botScore.Score >= thresholdBotScore2)
+        {
+            return true;
+        }
+
+        return DetectBotByThirdParty(userAgent);
+    }
+
+    private static BotScore CheckBotByUserAgent(string userAgent)
+    {
+        var botScore = new BotScore();
+
+        if (string.IsNullOrWhiteSpace(userAgent))
+        {
+            botScore.Score += 50;
+            botScore.Reason += "[Missing UA] ";
+        }
+        else
+        {
+            if (userAgent.Contains("Safari", StringComparison.OrdinalIgnoreCase) &&
+                    userAgent.Contains("Version/2", StringComparison.OrdinalIgnoreCase))
+            {
+                botScore.Score += 45;
+                botScore.Reason += "[Fake Safari Version/2] ";
+            }
+            else
+            {
+                if (BOT_INDICATORS.Any(b => userAgent.ToLower().Contains(b)))
+                {
+                    botScore.Score += 40;
+                    botScore.Reason += "[Suspicious UA] ";
+                }
+            }
+        }
+
+        return botScore;
+    }
+
+    private static bool DetectBotByThirdParty(string userAgent)
+    {
+        // CrawlerDetect may throw only fatal errors, usually safe
+        var crawlerDetect = new CrawlerDetect();
+        if (crawlerDetect.IsCrawler(userAgent))
+        {
+            return true;
+        }
+
+        var deviceDetector = new DeviceDetector(userAgent);
+        deviceDetector.Parse();
+        if (deviceDetector.IsBot())
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task DetectBot(DateTime fromDate, DateTime toDate)
+    {
+        var criteria = new GetClickStatisticCriteria
+        {
+            FromDate = fromDate,
+            ToDate = toDate
+        };
+
+        var normalClicks = new List<long>();
+        var excludedClicks = new List<long>();
+
+        var clickStatistics = await dynamicRepository.FetchAsync<ClickStatistic>(criteria).ConfigureAwait(false);
+        if (clickStatistics != null)
+        {
+            foreach (var clickStatistic in clickStatistics)
+            {
+                ClassifyClick(normalClicks, excludedClicks, clickStatistic);
+            }
+        }
+
+        var tasks = new List<Task>(2);
+
+        if (normalClicks.Count > 0)
+        {
+            tasks.Add(UpdateClickStatisticAsync(normalClicks, isExcluded: false));
+        }
+        if (excludedClicks.Count > 0)
+        {
+            tasks.Add(UpdateClickStatisticAsync(excludedClicks, isExcluded: true));
+        }
+
+        if (tasks.Count > 0)
+        {
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+    }
+
+    private async Task UpdateClickStatisticAsync(IEnumerable<long> clickIds, bool isExcluded)
+    {
+        if (clickIds == null)
+        {
+            return;
+        }
+
+        var ids = string.Join(",", clickIds);
+        if (string.IsNullOrEmpty(ids))
+        {
+            return;
+        }
+
+        var command = new UpdateClickStatisticCommand
+        {
+            ClickIDs = ids,
+            IsExcluded = isExcluded,
+            ErrMsg = string.Empty,
+        };
+
+        await dynamicRepository.ExecuteAsync(command).ConfigureAwait(false);
+    }
+
+    private void ClassifyClick(ICollection<long> normalClicks, ICollection<long> excludedClicks, ClickStatistic clickStatistic)
+    {
+        if (clickStatistic == null)
+        {
+            return;
+        }
+
+        var isBot = DetectBotFromUserAgent(clickStatistic.UserAgent);
+
+        if (isBot && !clickStatistic.IsIsExcluded)
+        {
+            excludedClicks.Add(clickStatistic.ClickId);
+        }
+        else if (!isBot && clickStatistic.IsIsExcluded)
+        {
+            normalClicks.Add(clickStatistic.ClickId);
+        }
+    }
+}

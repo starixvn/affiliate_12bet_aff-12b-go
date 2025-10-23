@@ -8,6 +8,13 @@ namespace Fanex.Affiliate.Link.Core.Services;
 
 public class DatabaseService(IDynamicRepository dynamicRepository) : IDatabaseService
 {
+    private static readonly string[] SuspiciousUserAgents = new[]
+    {
+        "dalvik", "bot", "crawler", "spider",
+        "headless", "selenium", "scrapy", "curl",
+        "python", "elinks", "lynx", "wget"
+    };
+
     public async Task<CommandResult> InsertClickInfo(ClickTrackingEvent clickTrackingEvent)
     {
         var command = new ClickTrackingEventCommand
@@ -32,6 +39,7 @@ public class DatabaseService(IDynamicRepository dynamicRepository) : IDatabaseSe
             DeviceType = clickTrackingEvent.DeviceType,
             AffMediaLink = clickTrackingEvent.AffMediaLink,
             ChannelCode = clickTrackingEvent.ChannelCode,
+            IsExcluded = clickTrackingEvent.IsExcluded,
             ErrMsg = string.Empty // Required property from BaseNonQueryCommand
         };
 
