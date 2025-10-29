@@ -155,10 +155,6 @@ public sealed class BotDetectionService (
             string level = botScore.Score >= 80 ? "HIGH" : "MEDIUM";
             logService.LogFileMessage($"Bot detected ({level}): Score={botScore}, Reason={botScore.Reason.Trim()}, IP={clientIp}, UA={userAgent}");
         }
-        else
-        {
-            logService.LogFileMessage($"Legit traffic: Score={botScore}, IP={clientIp}, UA={userAgent}");
-        }
     }
 
 

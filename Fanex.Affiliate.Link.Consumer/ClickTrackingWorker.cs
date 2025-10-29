@@ -87,7 +87,6 @@ public sealed class ClickTrackingWorker(
 
             try
             {
-                logService.LogFileMessage($"[Consumer] Processing: {message.Body.ToString()}");
                 var result = await databaseService.InsertClickInfo(message.Body);
                 if (!result.IsSuccessful)
                 {
@@ -99,7 +98,6 @@ public sealed class ClickTrackingWorker(
             }
             catch (Exception ex)
             {
-                logService.LogFileMessage("Maintenance mode active – message retained in queue.");
                 var errMessage = await ProcessMessageWhenError(message);
                 await logService.SentryErrorAsync(errMessage, ex);
                 await Task.FromResult(AckStrategies.Ack);
