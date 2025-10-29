@@ -1,8 +1,5 @@
 using Fanex.Affiliate.Link.Core.Services;
-using Fanex.Affiliate.Link.Core.Services.Interfaces;
-using FluentAssertions;
 using Moq;
-using NLog;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Core.Tests.Services;

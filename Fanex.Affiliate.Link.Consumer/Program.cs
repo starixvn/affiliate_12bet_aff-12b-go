@@ -10,11 +10,16 @@ using Fanex.Logging.Sentry.RavenClient;
 using Microsoft.AspNetCore.Builder;
 using ONEbook.UM.DependencyInjection;
 using ONEbook.UM.Services;
+using Serilog;
 using SharpRaven;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((context, loggerConfiguration) =>
+{
+    loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+});
 RegisterWorker(builder);
 
 var rabbitMqConnectionString = builder.Configuration.GetValue<string>("RabbitMQConnectionString");

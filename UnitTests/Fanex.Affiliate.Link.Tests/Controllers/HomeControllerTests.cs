@@ -25,6 +25,7 @@ public class HomeControllerTests
     private readonly Mock<IClickTrackingEventService> _clickTrackingMock;
     private readonly Mock<IMaintenanceService> _maintenanceMock;
     private readonly Mock<IHttpContextService> _httpContextMock;
+    private readonly Mock<IRedisService> _redisServiceMock;
     private readonly Mock<ILogService> _logServiceMock;
     private readonly Mock<IBotDetectionService> _botDetectionServiceMock;
     private readonly IConfiguration _config;
@@ -34,7 +35,6 @@ public class HomeControllerTests
     {
         var inMemory = new Dictionary<string, string>
         {
-            ["AppSettings:RemovePortFromUrl"] = "1",
             ["AppSettings:Redirect_home_pattern"] = "/#language#/home"
         };
         _config = new ConfigurationBuilder().AddInMemoryCollection(inMemory!).Build();
@@ -65,6 +65,7 @@ public class HomeControllerTests
             _clickTrackingMock.Object,
             _maintenanceMock.Object,
             _config,
+            _redisServiceMock.Object,
             _httpContextMock.Object,
             _botDetectionServiceMock.Object,
             _logServiceMock.Object)
@@ -469,6 +470,7 @@ public class HomeControllerTests
             _clickTrackingMock.Object,
             _maintenanceMock.Object,
             _config,
+            _redisServiceMock.Object,
             _httpContextMock.Object,
             _botDetectionServiceMock.Object,
             _logServiceMock.Object)
@@ -547,6 +549,7 @@ public class HomeControllerTests
             null!,
             _maintenanceMock.Object,
             _config,
+            _redisServiceMock.Object,
             _httpContextMock.Object,
             _botDetectionServiceMock.Object,
             _logServiceMock.Object);
@@ -562,6 +565,7 @@ public class HomeControllerTests
             _clickTrackingMock.Object,
             null!,
             _config,
+            _redisServiceMock.Object,
             _httpContextMock.Object,
             _botDetectionServiceMock.Object,
             _logServiceMock.Object);
@@ -577,6 +581,7 @@ public class HomeControllerTests
             _clickTrackingMock.Object,
             _maintenanceMock.Object,
             null!,
+            _redisServiceMock.Object,
             _httpContextMock.Object,
             _botDetectionServiceMock.Object,
             _logServiceMock.Object);
@@ -592,6 +597,7 @@ public class HomeControllerTests
             _clickTrackingMock.Object,
             _maintenanceMock.Object,
             _config,
+            _redisServiceMock.Object,
             null!,
             _botDetectionServiceMock.Object,
             _logServiceMock.Object);
@@ -607,6 +613,7 @@ public class HomeControllerTests
             _clickTrackingMock.Object,
             _maintenanceMock.Object,
             _config,
+            _redisServiceMock.Object,
             _httpContextMock.Object,
             _botDetectionServiceMock.Object,
             null!);

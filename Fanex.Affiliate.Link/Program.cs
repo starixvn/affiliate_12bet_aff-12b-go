@@ -10,11 +10,37 @@ using Fanex.Affiliate.Link.Services.Interface;
 using Fanex.Affiliate.Link.Workers;
 using Fanex.Data;
 using Fanex.Data.Repository;
+using Microsoft.AspNetCore.HttpLogging;
 using ONEbook.UM.DependencyInjection;
 using ONEbook.UM.Services;
+using Serilog;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, loggerConfiguration) =>
+{
+    loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+});
+
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields = HttpLoggingFields.All;
+    var allHeaders = new[]
+    {
+        "Accept", "Accept-Encoding", "Accept-Language",
+        "User-Agent", "Referer", "Origin", "Host",
+        "Connection", "Cache-Control", "Pragma"
+    };
+
+    options.RequestBodyLogLimit = 4096;
+    options.ResponseBodyLogLimit = 4096;
+
+    foreach (var header in allHeaders)
+    {
+        options.RequestHeaders.Add(header);
+    }
+});
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
@@ -73,6 +99,7 @@ _ = ThreadPool.SetMinThreads(DefaultWorkerThreads, DefaultCompletionPortThreads)
 
 var app = builder.Build();
 
+app.UseHttpLogging();
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
