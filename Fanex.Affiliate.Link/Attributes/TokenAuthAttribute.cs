@@ -8,7 +8,7 @@ namespace Fanex.Affiliate.Link.Attributes
     /// Authorization attribute for health check endpoints
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class HealthCheckAuthAttribute : Attribute, IAuthorizationFilter
+    public class TokenAuthAttribute : Attribute, IAuthorizationFilter
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {

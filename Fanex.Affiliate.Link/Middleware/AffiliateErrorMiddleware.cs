@@ -1,4 +1,5 @@
 using Fanex.Affiliate.Link.Constants;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace Fanex.Affiliate.Link.Middleware
@@ -26,6 +27,7 @@ namespace Fanex.Affiliate.Link.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
+            WriteLogRequest(context);
             await _next(context);
 
             if (ShouldHandleError(context))
@@ -35,6 +37,31 @@ namespace Fanex.Affiliate.Link.Middleware
                 {
                     await HandleAffiliateError(context, customError);
                 }
+            }
+        }
+
+        private void WriteLogRequest(HttpContext context)
+        {
+            try
+            {
+                var props = new Dictionary<string, string>();
+
+                foreach (var header in context.Request.Headers)
+                {
+                    if (header.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase) ||
+                        header.Key.Equals("Cookie", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    props[header.Key] = header.Value.ToString();
+                }
+
+                _logger.LogInformation("Incoming request with headers: {@Headers}", props);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation("WriteLogRequest error", ex);
             }
         }
 

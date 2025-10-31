@@ -13,4 +13,6 @@ public interface ILogService
     void LogFileMessage(string message);
 
     void LogFileError(Exception exception);
+
+    void LogFileMessageWithProperties(string message, Dictionary<string, object> properties);
 }

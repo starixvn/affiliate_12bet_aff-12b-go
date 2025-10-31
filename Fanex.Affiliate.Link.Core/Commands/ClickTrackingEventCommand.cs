@@ -44,6 +44,8 @@ public class ClickTrackingEventCommand : BaseNonQueryCommand
 
     public required string RedirectURL { get; set; }
 
+    public bool IsExcluded { get; set; }
+
     public override string GetSettingKey() => "Aff_ClickStatisticsIns";
 
     public override bool IsValid() => true;

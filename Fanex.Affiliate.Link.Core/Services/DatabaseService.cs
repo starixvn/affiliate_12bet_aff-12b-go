@@ -32,6 +32,7 @@ public class DatabaseService(IDynamicRepository dynamicRepository) : IDatabaseSe
             DeviceType = clickTrackingEvent.DeviceType,
             AffMediaLink = clickTrackingEvent.AffMediaLink,
             ChannelCode = clickTrackingEvent.ChannelCode,
+            IsExcluded = clickTrackingEvent.IsExcluded,
             ErrMsg = string.Empty // Required property from BaseNonQueryCommand
         };
 

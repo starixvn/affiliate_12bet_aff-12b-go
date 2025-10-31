@@ -4,6 +4,7 @@
     using System.Linq;
     using System.Text.Json;
     using System.Threading.Tasks;
+    using Fanex.Affiliate.Link.Attributes;
     using Fanex.Affiliate.Link.Constants;
     using Fanex.Affiliate.Link.Core.Models;
     using Fanex.Affiliate.Link.Core.Services.Interfaces;
@@ -18,36 +19,21 @@
     /// <summary>
     /// Home controller for affiliate link.
     /// </summary>
-    public class HomeController : Controller
+    public class HomeController(
+            IClickTrackingEventService trackingSystemService,
+            IMaintenanceService maintenanceService,
+            IConfiguration configuration,
+            IRedisService redisService,
+            IHttpContextService httpContextService,
+            IBotDetectionService botDetectionService,
+            ILogService logService) : Controller
     {
-        private readonly bool isRemovePortFromUrl;
-
-        private readonly IClickTrackingEventService trackingSystemService;
-        private readonly IConfiguration configuration;
-        private readonly IMaintenanceService maintenanceService;
-        private readonly IHttpContextService httpContextService;
-        private readonly ILogService logService;
         private const string LinkIsInvalidMessage = "Oops! This link does not exist. Please reach out to the administrator if you need help.";
         private const string LinkIsIncorrectMessage = "Oops! This link is in an incorrect format. Please reach out to the administrator for assistance.";
         private const string LinkIsOutdatedMessage = "Oops! This link is using an outdated format. Please contact the administrator to get it updated.";
         
         // HTTP Status Codes
         private const int HttpStatusInternalServerError = 500;
-
-        public HomeController(
-            IClickTrackingEventService trackingSystemService,
-            IMaintenanceService maintenanceService,
-            IConfiguration configuration,
-            IHttpContextService httpContextService,
-            ILogService logService)
-        {
-            this.trackingSystemService = trackingSystemService ?? throw new ArgumentNullException(nameof(trackingSystemService));
-            this.maintenanceService = maintenanceService ?? throw new ArgumentNullException(nameof(maintenanceService));
-            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            this.httpContextService = httpContextService ?? throw new ArgumentNullException(nameof(httpContextService));
-            this.logService = logService ?? throw new ArgumentNullException(nameof(logService));
-            isRemovePortFromUrl = this.configuration["AppSettings:RemovePortFromUrl"].MatchWith("1");
-        }
 
         public IActionResult Index() => View();
 
@@ -58,6 +44,55 @@
         public IActionResult PageNotFound() => View();
 
         [HttpGet]
+        [TokenAuth]
+        public async Task<IActionResult> DeleteRedisKey(string redisKey)
+        {
+            try
+            {
+                var result = await redisService.RemoveAsync(redisKey);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                await logService.SentryErrorAsync(ex).ConfigureAwait(false);
+                return StatusCode(HttpStatusInternalServerError, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [TokenAuth]
+        public async Task<IActionResult> CheckBot(string userAgent)
+        {
+            try
+            {
+                var isBot = botDetectionService.DetectBotFromUserAgent(userAgent);
+                return Ok(isBot);
+            }
+            catch (Exception ex)
+            {
+                await logService.SentryErrorAsync(ex).ConfigureAwait(false);
+                return StatusCode(HttpStatusInternalServerError, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [TokenAuth]
+        public async Task<IActionResult> DetectBot(DateTime fromDate, DateTime toDate)
+        {
+            try
+            {
+                await botDetectionService.DetectBot(fromDate, toDate);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                await logService.SentryErrorAsync(ex).ConfigureAwait(false);
+                return StatusCode(HttpStatusInternalServerError, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [TokenAuth]
         public async Task<IActionResult> SyncMaxClickId(bool isSync = true)
         {
             try
@@ -73,6 +108,7 @@
         }
 
         [HttpGet]
+        [TokenAuth]
         public async Task<IActionResult> RefreshCacheData()
         {
             try
@@ -207,6 +243,8 @@
             clickTrackingEvent.UpdatedTime = DateTimeHelper.GmtMinus4Now;
             clickTrackingEvent.RedirectLink = $"{clickTrackingEvent.RedirectLink}&clickId={clickId}";
 
+            var isExcluded = botDetectionService.IsBot(HttpContext);
+            clickTrackingEvent.IsExcluded = isExcluded;
             await trackingSystemService.PublishMessage(clickTrackingEvent).ConfigureAwait(false);
 
             var forwardQueryString = Request.QueryString.Value.ReplaceStr("?", "&");
@@ -418,11 +456,6 @@
             }
 
             string resultUrl = urlWithoutProtocol;
-            if (isRemovePortFromUrl && Uri.TryCreate($"https://{urlWithoutProtocol}", UriKind.Absolute, out var uri))
-            {
-                resultUrl = urlWithoutProtocol.ReplaceStr($":{uri.Port}", string.Empty, StringComparison.Ordinal);
-            }
-
             int pos = resultUrl.IndexOf($"/{endPointOfAffDomain}", StringComparison.OrdinalIgnoreCase);
             return pos > 0 ? resultUrl.Substring(0, pos) : resultUrl;
         }

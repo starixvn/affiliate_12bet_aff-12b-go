@@ -10,7 +10,7 @@ namespace Fanex.Affiliate.Link.Constants
         public const string SUPPORTED_MARKET_CACHE_KEY = "Aff.12B.Go.Supported.Makets";
         public const string MARKET_INFO_CACHE_KEY = "Aff.12B.Go.Maket.Info";
         public const string MASTER_DATA = "Aff.12B.Go.MasterData";
-        public const string CLICKID = "Aff.12B.Go.ClickId";
+        public const string CLICKID = "Aff.12B.GOTO.ClickId";
         public const string CLICKQUEUES = "Aff.12B.Go.ClickQueues";
     }
 }

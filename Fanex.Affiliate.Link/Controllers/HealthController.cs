@@ -81,7 +81,7 @@ namespace Fanex.Affiliate.Link.Controllers
         /// Detailed health check with all component statuses
         /// </summary>
         [HttpGet("detailed")]
-        [HealthCheckAuth]
+        [TokenAuth]
         public async Task<ActionResult<HealthStatus>> GetDetailed()
         {
             try
@@ -113,7 +113,7 @@ namespace Fanex.Affiliate.Link.Controllers
         /// Health check for specific component
         /// </summary>
         [HttpGet("component/{componentName}")]
-        [HealthCheckAuth]
+        [TokenAuth]
         public async Task<ActionResult<ComponentHealth>> GetComponentHealth(string componentName)
         {
             try
@@ -143,7 +143,7 @@ namespace Fanex.Affiliate.Link.Controllers
         /// System metrics endpoint
         /// </summary>
         [HttpGet("metrics")]
-        [HealthCheckAuth]
+        [TokenAuth]
         public async Task<ActionResult<SystemMetrics>> GetMetrics()
         {
             try
@@ -162,7 +162,7 @@ namespace Fanex.Affiliate.Link.Controllers
         /// Health check dashboard view
         /// </summary>
         [HttpGet("dashboard")]
-        [HealthCheckAuth]
+        [TokenAuth]
         public async Task<IActionResult> Dashboard()
         {
             try

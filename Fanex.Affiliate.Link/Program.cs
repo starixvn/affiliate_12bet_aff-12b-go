@@ -12,9 +12,15 @@ using Fanex.Data;
 using Fanex.Data.Repository;
 using ONEbook.UM.DependencyInjection;
 using ONEbook.UM.Services;
+using Serilog;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, loggerConfiguration) =>
+{
+    loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+});
 
 // Add services to the container
 builder.Services.AddControllersWithViews();
@@ -50,6 +56,8 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
+builder.Services.AddScoped<IBotDetectionService, BotDetectionService>();
+
 RedisConnectionHelper.Initialize(builder.Configuration);
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => RedisConnectionHelper.Connection);
 builder.Services.AddSingleton<IRedisService, RedisService>();
@@ -59,7 +67,7 @@ builder.Services.AddSingleton<Fanex.Logging.ILogger, Fanex.Logging.Logger>();
 builder.Services.AddSingleton<ILogService, LogService>();
 
 builder.Services.AddHostedService<RabbitMqBusHostedService>();
-builder.Services.AddSingleton<IRabbitBus, Fanex.Affiliate.Link.Core.Services.RabbitBus>();
+builder.Services.AddSingleton<IRabbitBus, RabbitBus>();
 builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 
 builder.Services.AddOneBookUmForService(builder.Configuration);
@@ -104,4 +112,4 @@ DbSettingProviderManager
 // Register Sentry logging
 Fanex.Affiliate.Link.LoggingConfig.RegisterSentry();
 
-app.Run();
+await app.RunAsync();

@@ -10,5 +10,7 @@
 		<Setting Key="Aff_ClickStatistics_BulkCache" SpName="Aff_ClickStatistics_BulkCache" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
 		<Setting Key="Aff_ClickStatistics_MaxClickId_Sel" SpName="Aff_ClickStatistics_MaxClickId_Sel" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
 		<Setting Key="Aff_ClickStatistics_RedirectPage_Sel" SpName="Aff_ClickStatistics_RedirectPage_Sel" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
+		<Setting Key="Aff_ClickStatisticsPatterns_Upd" SpName="Aff_ClickStatisticsPatterns_Upd" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
+		<Setting Key="Aff_ClickStatisticsPatterns_Sel" SpName="Aff_ClickStatisticsPatterns_Sel" DbName="DBAFF12B.Affiliate_12B.wsv_afinet" />
 	</Function>
 </Functions>

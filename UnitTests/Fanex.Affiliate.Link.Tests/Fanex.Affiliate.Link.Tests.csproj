@@ -26,12 +26,15 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.7" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.7" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.7" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Fanex.Affiliate.Link\Fanex.Affiliate.Link.csproj" />
     <ProjectReference Include="..\..\Fanex.Affiliate.Link.Core\Fanex.Affiliate.Link.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Criterias\" />
   </ItemGroup>
 
 </Project>

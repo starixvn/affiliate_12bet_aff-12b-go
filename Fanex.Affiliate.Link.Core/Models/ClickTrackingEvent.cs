@@ -26,4 +26,5 @@ public class ClickTrackingEvent
     public long ClickId { get; set; }
     public DateTime UpdatedTime { get; set; }
     public required string AffMediaLink { get; set; }
+    public bool IsExcluded { get; set; }
 }
