@@ -200,7 +200,7 @@ public sealed class BotDetectionService (
             }
             else
             {
-                if (Array.Exists(BOT_INDICATORS, b => userAgent.ToLowerInvariant().Contains(b)))
+                if (Array.Exists(BOT_INDICATORS, b => userAgent.IndexOf(b, StringComparison.OrdinalIgnoreCase) >= 0))
                 {
                     botScore.Score += 40;
                     botScore.Reason += "[Suspicious UA] ";
