@@ -1,4 +1,3 @@
-using Fanex.Affiliate.Link.Core;
 using FluentAssertions;
 using Xunit;
 
@@ -60,7 +59,7 @@ public class ConstantsTests
         // This test verifies the value remains consistent
         var firstValue = Constants.QueueIdentify;
         var secondValue = Constants.QueueIdentify;
-        
+
         firstValue.Should().Be(secondValue);
     }
 
@@ -72,7 +71,7 @@ public class ConstantsTests
         // This test verifies the value remains consistent
         var firstValue = Constants.CacheRedisQueueName;
         var secondValue = Constants.CacheRedisQueueName;
-        
+
         firstValue.Should().Be(secondValue);
     }
 
@@ -146,16 +145,16 @@ public class ConstantsTests
         // Act & Assert
         var queueIdentifyField = typeof(Constants).GetField("QueueIdentify");
         var cacheRedisQueueNameField = typeof(Constants).GetField("CacheRedisQueueName");
-        
+
         queueIdentifyField.Should().NotBeNull();
         cacheRedisQueueNameField.Should().NotBeNull();
-        
+
         queueIdentifyField!.IsPublic.Should().BeTrue();
         cacheRedisQueueNameField!.IsPublic.Should().BeTrue();
-        
+
         queueIdentifyField.IsStatic.Should().BeTrue();
         cacheRedisQueueNameField.IsStatic.Should().BeTrue();
-        
+
         queueIdentifyField.IsLiteral.Should().BeTrue();
         cacheRedisQueueNameField.IsLiteral.Should().BeTrue();
     }

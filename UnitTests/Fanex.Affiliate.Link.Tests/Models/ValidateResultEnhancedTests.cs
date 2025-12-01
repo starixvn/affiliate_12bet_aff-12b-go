@@ -93,16 +93,16 @@ public class ValidateResultEnhancedTests
         validateResult.IsValid = true;
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().BeNull();
-        
+
         validateResult.ErrorMessage = "test error";
         validateResult.ErrorMessage.Should().Be("test error");
         validateResult.IsValid.Should().BeTrue();
-        
+
         validateResult.RedirectLink = "test view";
         validateResult.RedirectLink.Should().Be("test view");
         validateResult.IsValid.Should().BeTrue();
         validateResult.ErrorMessage.Should().Be("test error");
-        
+
         validateResult.IsAffMarketing = true;
         validateResult.IsAffMarketing.Should().BeTrue();
         validateResult.IsValid.Should().BeTrue();

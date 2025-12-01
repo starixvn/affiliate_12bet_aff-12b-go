@@ -1,4 +1,3 @@
-using Fanex.Affiliate.Link.Models;
 using Fanex.Affiliate.Link.Services.Impl;
 using FluentAssertions;
 using Xunit;

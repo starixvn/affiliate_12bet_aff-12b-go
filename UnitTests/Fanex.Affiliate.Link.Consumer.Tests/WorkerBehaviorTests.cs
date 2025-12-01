@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using EasyNetQ;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Commands;
@@ -9,6 +7,8 @@ using FluentAssertions;
 using Moq;
 using ONEbook.UM.Models;
 using ONEbook.UM.Services;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Consumer.Tests;
@@ -47,9 +47,9 @@ public class WorkerBehaviorTests
             mockLogService.Object);
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(worker, null)!;
         await task;
 
@@ -81,14 +81,14 @@ public class WorkerBehaviorTests
             mockLogService.Object);
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(worker, null)!;
         await task;
 
         // Assert - Should handle empty queue gracefully
-        mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName), 
+        mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName),
             Times.Once);
         mockDatabaseService.Verify(x => x.InsertClickInfo(It.IsAny<ClickTrackingEvent>()), Times.Never);
     }
@@ -178,7 +178,7 @@ public class WorkerBehaviorTests
         // Assert
         Constants.QueueIdentify.Should().Be("12b.user.click");
         Constants.CacheRedisQueueName.Should().Be("Aff.12B.Go.ClickQueues");
-        
+
         Constants.QueueIdentify.Should().NotBeNullOrEmpty();
         Constants.CacheRedisQueueName.Should().NotBeNullOrEmpty();
     }
@@ -270,9 +270,9 @@ public class WorkerBehaviorTests
             mockLogService.Object);
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(worker, null)!;
         await task;
 

@@ -1,8 +1,8 @@
-using System;
 using Fanex.Affiliate.Link.Constants;
 using Fanex.Affiliate.Link.Extensions;
 using Fanex.Affiliate.Link.Helpers;
 using FluentAssertions;
+using System;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests;

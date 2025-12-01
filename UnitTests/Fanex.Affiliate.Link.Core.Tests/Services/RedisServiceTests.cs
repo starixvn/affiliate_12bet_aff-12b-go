@@ -16,10 +16,10 @@ public class RedisServiceTests
     {
         _mockConnectionMultiplexer = new Mock<IConnectionMultiplexer>();
         _mockDatabase = new Mock<IDatabase>();
-        
+
         _mockConnectionMultiplexer.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>()))
             .Returns(_mockDatabase.Object);
-        
+
         _redisService = new RedisService(_mockConnectionMultiplexer.Object);
     }
 
@@ -96,7 +96,7 @@ public class RedisServiceTests
         const string expectedValue = "test-value";
         // Use a simple string value for testing
         var redisValue = new RedisValue(expectedValue);
-        
+
         _mockDatabase.Setup(x => x.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValue);
 
@@ -115,7 +115,7 @@ public class RedisServiceTests
         // Arrange
         const string key = "test-key";
         var redisValue = RedisValue.Null;
-        
+
         _mockDatabase.Setup(x => x.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValue);
 
@@ -135,7 +135,7 @@ public class RedisServiceTests
         var slidingExpirationTime = TimeSpan.FromMinutes(30);
         // Use a simple string value for testing
         var redisValue = new RedisValue(expectedValue);
-        
+
         _mockDatabase.Setup(x => x.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValue);
         _mockDatabase.Setup(x => x.KeyExpireAsync(key, slidingExpirationTime, It.IsAny<CommandFlags>()))
@@ -157,7 +157,7 @@ public class RedisServiceTests
         const string key = "test-key";
         var slidingExpirationTime = TimeSpan.FromMinutes(30);
         var redisValue = RedisValue.Null;
-        
+
         _mockDatabase.Setup(x => x.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValue);
 
@@ -175,7 +175,7 @@ public class RedisServiceTests
         // Arrange
         const string key = "test-key";
         const long expectedValue = 5;
-        
+
         _mockDatabase.Setup(x => x.StringIncrementAsync(key, 1, It.IsAny<CommandFlags>()))
             .ReturnsAsync(expectedValue);
 
@@ -193,7 +193,7 @@ public class RedisServiceTests
         // Arrange
         const string key = "test-key";
         const string value = "test-value";
-        
+
         _mockDatabase.Setup(x => x.StringSetAsync(key, value, It.IsAny<TimeSpan?>(), It.IsAny<When>(), It.IsAny<CommandFlags>()))
             .ReturnsAsync(true);
 
@@ -213,7 +213,7 @@ public class RedisServiceTests
         const string key = "test-key";
         const string expectedValue = "test-value";
         var redisValue = new RedisValue(expectedValue);
-        
+
         _mockDatabase.Setup(x => x.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValue);
 
@@ -230,7 +230,7 @@ public class RedisServiceTests
         // Arrange
         const string key = "test-key";
         var redisValue = RedisValue.Null;
-        
+
         _mockDatabase.Setup(x => x.StringGetAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValue);
 
@@ -248,8 +248,8 @@ public class RedisServiceTests
         const string key = "test-key";
         const string value = "test-value";
         const long expectedLength = 3;
-        
-        _mockDatabase.Setup(x => x.ListLeftPushAsync(key, It.IsAny<RedisValue>(), It.IsAny<When>(), It.IsAny<CommandFlags>()))
+
+        _mockDatabase.Setup(x => x.ListRightPushAsync(key, It.IsAny<RedisValue>(), It.IsAny<When>(), It.IsAny<CommandFlags>()))
             .ReturnsAsync(expectedLength);
 
         // Act
@@ -257,7 +257,7 @@ public class RedisServiceTests
 
         // Assert
         result.Should().Be(expectedLength);
-        _mockDatabase.Verify(x => x.ListLeftPushAsync(key, It.IsAny<RedisValue>(), It.IsAny<When>(), It.IsAny<CommandFlags>()), Times.Once);
+        _mockDatabase.Verify(x => x.ListRightPushAsync(key, It.IsAny<RedisValue>(), It.IsAny<When>(), It.IsAny<CommandFlags>()), Times.Once);
     }
 
     [Fact]
@@ -268,7 +268,7 @@ public class RedisServiceTests
         const string expectedValue = "test-value";
         // Use a simple string value for testing
         var redisValue = new RedisValue(expectedValue);
-        
+
         _mockDatabase.Setup(x => x.ListLeftPopAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValue);
 
@@ -287,7 +287,7 @@ public class RedisServiceTests
         // Arrange
         const string key = "test-key";
         var redisValue = RedisValue.Null;
-        
+
         _mockDatabase.Setup(x => x.ListLeftPopAsync(key, It.IsAny<CommandFlags>()))
             .ReturnsAsync(redisValue);
 
@@ -305,7 +305,7 @@ public class RedisServiceTests
         const string key = "test-key";
         const string value = "test-value";
         var ttl = TimeSpan.FromMinutes(30);
-        
+
         _mockDatabase.Setup(x => x.StringSetAsync(key, value, ttl, It.IsAny<bool>(), It.IsAny<When>(), It.IsAny<CommandFlags>()))
             .ReturnsAsync(true);
 

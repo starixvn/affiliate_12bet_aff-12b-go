@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Fanex.Affiliate.Link.Controllers;
 using Fanex.Affiliate.Link.Models.HealthCheck;
 using Fanex.Affiliate.Link.Services.HealthCheck;
@@ -8,6 +5,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Controllers;
@@ -35,9 +35,9 @@ public class HealthControllerTests
     public void Constructor_ShouldThrowArgumentNullException_WhenHealthCheckServiceIsNull()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => 
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             new HealthController(null!, _mockServerInfoService.Object, _mockLogger.Object));
-        
+
         exception.ParamName.Should().Be("healthCheckService");
     }
 
@@ -45,9 +45,9 @@ public class HealthControllerTests
     public void Constructor_ShouldThrowArgumentNullException_WhenServerInfoServiceIsNull()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => 
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             new HealthController(_mockHealthCheckService.Object, null!, _mockLogger.Object));
-        
+
         exception.ParamName.Should().Be("serverInfoService");
     }
 
@@ -55,9 +55,9 @@ public class HealthControllerTests
     public void Constructor_ShouldThrowArgumentNullException_WhenLoggerIsNull()
     {
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => 
+        var exception = Assert.Throws<ArgumentNullException>(() =>
             new HealthController(_mockHealthCheckService.Object, _mockServerInfoService.Object, null!));
-        
+
         exception.ParamName.Should().Be("logger");
     }
 

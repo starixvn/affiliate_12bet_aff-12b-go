@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using EasyNetQ;
-using EasyNetQ.Consumer;
-using EasyNetQ.Topology;
-using Fanex.Affiliate.Link.Consumer;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Commands;
 using Fanex.Affiliate.Link.Core.Models;
@@ -14,6 +7,10 @@ using FluentAssertions;
 using Moq;
 using ONEbook.UM.Models;
 using ONEbook.UM.Services;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Consumer.Tests;

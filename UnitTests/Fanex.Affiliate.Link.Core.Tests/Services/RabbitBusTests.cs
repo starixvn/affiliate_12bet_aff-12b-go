@@ -1,15 +1,10 @@
 using EasyNetQ;
 using EasyNetQ.Topology;
-using Fanex.Affiliate.Link.Core.Services;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using FluentAssertions;
 using Moq;
-using Xunit;
-using System;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-
+using Xunit;
 using CoreRabbitBus = Fanex.Affiliate.Link.Core.Services.RabbitBus;
 
 namespace Fanex.Affiliate.Link.Core.Tests.Services;
@@ -225,7 +220,7 @@ public class RabbitBusTests
 
         // Act - First call throws and resets exchange to null
         var result1 = await _rabbitBus.PublishAsync(new TestModel { Id = 1, Name = "fail" });
-        
+
         // Second call should return false because exchange is null and RegisterQueueAsync will fail
         var result2 = await _rabbitBus.PublishAsync(new TestModel { Id = 2, Name = "fail again" });
 

@@ -1,4 +1,3 @@
-using Fanex.Affiliate.Link.Core;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -83,7 +82,7 @@ public class RedisConnectionHelperTests
         // In a real scenario, the Connection property would throw InvalidOperationException
         // when accessed without calling Initialize first
         // For unit testing purposes, we'll skip this test as it's hard to control static state
-        
+
         // Act & Assert
         Assert.True(true); // Placeholder assertion
     }

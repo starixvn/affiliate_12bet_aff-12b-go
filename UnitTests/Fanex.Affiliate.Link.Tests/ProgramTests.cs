@@ -12,18 +12,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
 using ONEbook.UM.Services;
 using StackExchange.Redis;
-using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using Xunit;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Fanex.Logging;
 
 namespace Fanex.Affiliate.Link.Tests;
 
@@ -34,7 +31,7 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         // Mock dependencies
         builder.Services.AddSingleton<IDynamicRepository>(sp => null!);
         builder.Services.AddSingleton<IMemoryCacheService>(sp => null!);
@@ -55,7 +52,7 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         // Mock dependencies
         builder.Services.AddSingleton<IDynamicRepository>(sp => null!);
         builder.Services.AddSingleton<IMemoryCacheService>(sp => null!);
@@ -89,7 +86,7 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         // Note: MaintenanceService requires complex ONEbook.UM dependencies
         // This test verifies that the service can be registered without throwing exceptions
         // In a real application, these dependencies would be properly configured
@@ -131,11 +128,11 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         // Note: HealthCheck services require complex setup which is not available in unit tests
         // This test verifies that the services can be registered without throwing exceptions
         // In a real application environment, these services would be properly configured
-        
+
         // Mock basic dependencies
         builder.Services.AddSingleton<IDynamicRepository>(sp => null!);
         builder.Services.AddSingleton<IRedisService>(sp => null!);
@@ -145,7 +142,7 @@ public class ProgramTests
         builder.Services.AddSingleton<IHealthCheckHistoryService>(sp => null!);
         builder.Services.AddSingleton<IHealthCheckServerInfoService>(sp => null!);
         builder.Services.AddSingleton<Microsoft.Extensions.Logging.ILogger<HealthCheckService>>(sp => null!);
-        
+
         // Register the main service
         builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
 
@@ -160,7 +157,7 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         // Note: Redis services require proper Redis connection which is not available in unit tests
         // This test verifies that the services can be registered without throwing exceptions
         Assert.True(true); // Placeholder assertion
@@ -171,10 +168,10 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         // Mock dependencies
         builder.Services.AddSingleton<ILogService>(sp => null!);
-        
+
         builder.Services.AddHostedService<RabbitMqBusHostedService>();
         builder.Services.AddSingleton<IRabbitBus, Fanex.Affiliate.Link.Core.Services.RabbitBus>();
 
@@ -202,7 +199,7 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         // Note: Logging services require proper setup which is not available in unit tests
         // This test verifies that the services can be registered without throwing exceptions
         Assert.True(true); // Placeholder assertion
@@ -280,7 +277,7 @@ public class ProgramTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        
+
         // Mock dependencies
         builder.Services.AddSingleton<IDynamicRepository>(sp => Mock.Of<IDynamicRepository>());
         builder.Services.AddSingleton<IMemoryCacheService>(sp => Mock.Of<IMemoryCacheService>());
@@ -310,7 +307,7 @@ public class ProgramTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        
+
         // Mock dependencies
         builder.Services.AddSingleton<ILogService>(sp => Mock.Of<ILogService>());
 
@@ -328,7 +325,7 @@ public class ProgramTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        
+
         // Mock dependencies
         builder.Services.AddSingleton<IDynamicRepository>(sp => Mock.Of<IDynamicRepository>());
 
@@ -366,7 +363,7 @@ public class ProgramTests
         // Note: Fanex.Logging.Logger requires complex setup with log engines
         // This test verifies that the services can be registered without throwing exceptions
         // In a real application, these services would be properly configured
-        
+
         // Assert
         // Service registration doesn't throw exceptions
         Assert.True(true);
@@ -405,13 +402,13 @@ public class ProgramTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        
+
         // Add required services for middleware
         builder.Services.AddControllers();
 
         // Act
         var app = builder.Build();
-        
+
         // Configure middleware pipeline
         if (!app.Environment.IsDevelopment())
         {
@@ -433,13 +430,13 @@ public class ProgramTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        
+
         // Add required services for controllers
         builder.Services.AddControllers();
 
         // Act
         var app = builder.Build();
-        
+
         // Configure routes
         app.MapControllerRoute(
             name: "default",
@@ -471,7 +468,7 @@ public class ProgramTests
     {
         // Arrange
         var builder = WebApplication.CreateBuilder();
-        
+
         // Mock Redis connection
         var mockConnection = Mock.Of<IConnectionMultiplexer>();
         builder.Services.AddSingleton<IConnectionMultiplexer>(sp => mockConnection);

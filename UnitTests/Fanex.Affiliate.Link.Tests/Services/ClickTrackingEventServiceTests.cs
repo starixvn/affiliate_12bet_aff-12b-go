@@ -1,15 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Fanex.Affiliate.Link.Commands;
 using Fanex.Affiliate.Link.Core.Models;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using Fanex.Affiliate.Link.DTOs;
 using Fanex.Affiliate.Link.Services.Impl;
-using Fanex.Affiliate.Link.Services.Interface;
 using Fanex.Data.Repository;
 using FluentAssertions;
 using Moq;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Services;

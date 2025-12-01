@@ -9,7 +9,7 @@ namespace Fanex.Affiliate.Link.Models.HealthCheck
         public long MemoryUsedBytes { get; set; }
         public long MemoryTotalBytes { get; set; }
         private const double PercentageMultiplier = 100.0;
-        
+
         public double MemoryUsagePercent => MemoryTotalBytes > 0 ? (double)MemoryUsedBytes / MemoryTotalBytes * PercentageMultiplier : 0;
         public long DiskUsedBytes { get; set; }
         public long DiskTotalBytes { get; set; }

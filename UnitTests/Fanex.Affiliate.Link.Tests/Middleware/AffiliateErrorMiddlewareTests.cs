@@ -1,14 +1,13 @@
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using Fanex.Affiliate.Link.Middleware;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 using System;
-using Microsoft.Extensions.Logging.Abstractions;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Middleware;
 
@@ -235,7 +234,7 @@ public class AffiliateErrorMiddlewareTests
         context.Response.Body.Seek(0, SeekOrigin.Begin);
         using var reader = new StreamReader(context.Response.Body, Encoding.UTF8);
         var html = await reader.ReadToEndAsync();
-        
+
         if (shouldHandle)
         {
             html.Should().Contain("This link is in an incorrect format");

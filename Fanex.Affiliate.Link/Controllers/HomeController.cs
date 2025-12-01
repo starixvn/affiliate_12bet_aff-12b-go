@@ -1,9 +1,5 @@
 ﻿namespace Fanex.Affiliate.Link.Controllers
 {
-    using System;
-    using System.Linq;
-    using System.Text.Json;
-    using System.Threading.Tasks;
     using Fanex.Affiliate.Link.Attributes;
     using Fanex.Affiliate.Link.Constants;
     using Fanex.Affiliate.Link.Core.Models;
@@ -15,6 +11,10 @@
     using Microsoft.AspNetCore.Mvc;
     using ONEbook.UM.Services;
     using Services.Interface;
+    using System;
+    using System.Linq;
+    using System.Text.Json;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Home controller for affiliate link.
@@ -31,7 +31,7 @@
         private const string LinkIsInvalidMessage = "Oops! This link does not exist. Please reach out to the administrator if you need help.";
         private const string LinkIsIncorrectMessage = "Oops! This link is in an incorrect format. Please reach out to the administrator for assistance.";
         private const string LinkIsOutdatedMessage = "Oops! This link is using an outdated format. Please contact the administrator to get it updated.";
-        
+
         // HTTP Status Codes
         private const int HttpStatusInternalServerError = 500;
 
@@ -65,8 +65,15 @@
         {
             try
             {
-                var isBot = botDetectionService.DetectBotFromUserAgent(userAgent);
-                return Ok(isBot);
+                var botDetectionResult = botDetectionService.DetectBotFromUserAgentWithDetails(userAgent);
+                var result = new
+                {
+                    isBot = botDetectionResult.IsBot,
+                    score = botDetectionResult.Score,
+                    reason = botDetectionResult.Reason.Trim(),
+                    userAgent
+                };
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -183,7 +190,7 @@
             var affDomain = GetFullAffDomain(affMediaLinkWithoutProtocol, linkParams.PageCode);
 
             string urlReferrer = Request.Headers["Referer"].ToString();
-            string domainReferrer = !string.IsNullOrEmpty(urlReferrer) ? 
+            string domainReferrer = !string.IsNullOrEmpty(urlReferrer) ?
                 GetHostFromUri(urlReferrer)?.Host ?? string.Empty : string.Empty;
 
             if (string.IsNullOrEmpty(urlReferrer) && !string.IsNullOrEmpty(Request.Query["ref"].ToString()))
@@ -194,8 +201,8 @@
 
             string pageCodeOnV2 = GetSupportedPageCodeOnV2(linkParams.PageCode);
             string mappingRemovedLanguage = GetMappingRemovedLanguageCode(linkParams.Lang);
-            string userAgent = Request.Headers["User-Agent"].ToString();
-            string acceptLanguage = Request.Headers["Accept-Language"].ToString();
+            string userAgent = Request.Headers.UserAgent.ToString();
+            string acceptLanguage = Request.Headers.AcceptLanguage.ToString();
 
             var clickTrackingEvent = new ClickTrackingEvent
             {
@@ -267,7 +274,7 @@
                 {
                     validateResult = await ValidateLinkFromCache(clickTrackingEvent).ConfigureAwait(false);
                 }
-                catch(Exception ex) 
+                catch (Exception ex)
                 {
                     await logService.SentryErrorAsync(ex).ConfigureAwait(false);
                     validateResult = await trackingSystemService.ValidateLinkFromDatabase(clickTrackingEvent).ConfigureAwait(false);
@@ -413,7 +420,7 @@
 
         private ValidateResult ValidateLinkSpecialDomain(ClickTrackingEvent clickTrackingEvent, MasterInfoValidation masterInfoValidation)
         {
-            var domain = masterInfoValidation.SpecialDomainMappings.FirstOrDefault(m => m.AffDomain == clickTrackingEvent.AffDomain 
+            var domain = masterInfoValidation.SpecialDomainMappings.FirstOrDefault(m => m.AffDomain == clickTrackingEvent.AffDomain
                 && m.AffCode == clickTrackingEvent.AffCode);
 
             if (domain is null)

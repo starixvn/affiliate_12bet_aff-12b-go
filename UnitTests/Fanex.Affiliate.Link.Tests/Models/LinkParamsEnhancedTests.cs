@@ -95,16 +95,16 @@ public class LinkParamsEnhancedTests
         linkParams.PageCode = "test1";
         linkParams.PageCode.Should().Be("test1");
         linkParams.AffCode.Should().BeNull();
-        
+
         linkParams.AffCode = "test2";
         linkParams.AffCode.Should().Be("test2");
         linkParams.PageCode.Should().Be("test1");
-        
+
         linkParams.Lang = "test3";
         linkParams.Lang.Should().Be("test3");
         linkParams.PageCode.Should().Be("test1");
         linkParams.AffCode.Should().Be("test2");
-        
+
         linkParams.Channel = "test4";
         linkParams.Channel.Should().Be("test4");
         linkParams.PageCode.Should().Be("test1");

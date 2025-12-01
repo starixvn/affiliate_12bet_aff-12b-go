@@ -1,5 +1,4 @@
 using Fanex.Affiliate.Link.Constants;
-using Fanex.Affiliate.Link.Criterias;
 using Fanex.Affiliate.Link.DTOs;
 using Fanex.Affiliate.Link.Services.Impl;
 using Fanex.Affiliate.Link.Services.Interface;

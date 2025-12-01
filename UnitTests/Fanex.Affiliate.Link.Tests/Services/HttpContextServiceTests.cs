@@ -52,7 +52,7 @@ public class HttpContextServiceTests
     public void IsMobile_ShouldReturnFalse_WhenUserAgentTooShort()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["User-Agent"] = new StringValues("abc");
+        ctx.Request.Headers.UserAgent = new StringValues("abc");
         var service = CreateService(ctx);
 
         service.IsMobile().Should().BeFalse();
@@ -72,17 +72,17 @@ public class HttpContextServiceTests
     public void GetDeviceName_ShouldReturn_SpecificDevice_WhenKnown()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["User-Agent"] = new StringValues("Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)");
+        ctx.Request.Headers.UserAgent = new StringValues("Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)");
         var service = CreateService(ctx);
 
-        service.GetDeviceName(ctx.Request.Headers["User-Agent"]).Should().Be("iPhone");
+        service.GetDeviceName(ctx.Request.Headers.UserAgent).Should().Be("iPhone");
     }
 
     [Fact]
     public void GetDeviceName_ShouldReturn_Mobile_WhenUnknownButMobileUA()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["User-Agent"] = new StringValues("Android Mobile");
+        ctx.Request.Headers.UserAgent = new StringValues("Android Mobile");
         var service = CreateService(ctx);
 
         service.GetDeviceName("something").Should().Be("Mobile");
@@ -92,17 +92,17 @@ public class HttpContextServiceTests
     public void GetDeviceName_ShouldReturn_Computer_WhenNotMobile()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["User-Agent"] = new StringValues("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+        ctx.Request.Headers.UserAgent = new StringValues("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
         var service = CreateService(ctx);
 
-        service.GetDeviceName(ctx.Request.Headers["User-Agent"]).Should().Be("Computer/Laptop");
+        service.GetDeviceName(ctx.Request.Headers.UserAgent).Should().Be("Computer/Laptop");
     }
 
     [Fact]
     public void IsMobile_ShouldDetect_FromKeywords()
     {
         var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["User-Agent"] = new StringValues("Opera Mini on mobile");
+        ctx.Request.Headers.UserAgent = new StringValues("Opera Mini on mobile");
         var service = CreateService(ctx);
 
         service.IsMobile().Should().BeTrue();

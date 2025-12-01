@@ -94,7 +94,7 @@ public sealed class ClickTrackingDLQWorker(
                 var result = await databaseService.InsertClickInfo(message.Body);
                 if (!result.IsSuccessful)
                 {
-                    await logService.SentryErrorAsync($"InsertClickInfo fail - { result.ErrorMessage }");
+                    await logService.SentryErrorAsync($"InsertClickInfo fail - {result.ErrorMessage}");
                     await Task.FromResult(AckStrategies.NackWithRequeue);
                 }
                 else
@@ -120,7 +120,7 @@ public sealed class ClickTrackingDLQWorker(
             .AsAutoDelete(false)
             .WithArgument("x-queue-type", "quorum")
         );
-        
+
         await bus.Advanced.BindAsync(errorExchange, errorQueue, Constants.RoutingKey);
 
         StartConsumer();

@@ -1,8 +1,3 @@
-using System;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Fanex.Affiliate.Link.Consumer;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Commands;
 using Fanex.Affiliate.Link.Core.Models;
@@ -11,6 +6,9 @@ using FluentAssertions;
 using Moq;
 using ONEbook.UM.Models;
 using ONEbook.UM.Services;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Consumer.Tests;
@@ -73,14 +71,14 @@ public class ClickTrackingRedisStorageWorkerTests
         // Arrange
         var maintenanceTime = new UnderMaintenanceTime { IsUnderMaintenanceTime = false };
         _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
-        
+
         _mockRedisService.Setup(x => x.ListLeftPopAsync<ClickTrackingEvent>(It.IsAny<string>()))
             .ReturnsAsync((ClickTrackingEvent)null);
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
         await task;
 
@@ -96,9 +94,9 @@ public class ClickTrackingRedisStorageWorkerTests
         _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
         await task;
 
@@ -123,9 +121,9 @@ public class ClickTrackingRedisStorageWorkerTests
             .ReturnsAsync(new CommandResult { ErrorCode = 0, ErrorMessage = string.Empty });
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
         await task;
 
@@ -146,9 +144,9 @@ public class ClickTrackingRedisStorageWorkerTests
             .ThrowsAsync(exception);
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
         await task;
 
@@ -162,7 +160,7 @@ public class ClickTrackingRedisStorageWorkerTests
         // Arrange
         var maintenanceTime = new UnderMaintenanceTime { IsUnderMaintenanceTime = false };
         _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
-        
+
         _mockRedisService.Setup(x => x.ListLeftPopAsync<ClickTrackingEvent>(It.IsAny<string>()))
             .ReturnsAsync((ClickTrackingEvent)null);
 
@@ -186,7 +184,7 @@ public class ClickTrackingRedisStorageWorkerTests
 
         // Assert
         _mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeastOnce);
     }
 
@@ -228,7 +226,7 @@ public static class ClickTrackingRedisStorageWorkerExtensions
 {
     public static bool IsCurrentlyUnderMaintenance(this ClickTrackingRedisStorageWorker worker)
     {
-        var method = typeof(ClickTrackingRedisStorageWorker).GetMethod("IsCurrentlyUnderMaintenance", 
+        var method = typeof(ClickTrackingRedisStorageWorker).GetMethod("IsCurrentlyUnderMaintenance",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (bool)method!.Invoke(worker, null)!;
     }

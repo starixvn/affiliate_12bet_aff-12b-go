@@ -1,4 +1,3 @@
-using Fanex.Affiliate.Link.Core;
 using FluentAssertions;
 using Xunit;
 

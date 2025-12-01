@@ -1,6 +1,5 @@
 using Fanex.Affiliate.Link.Services.Impl;
 using FluentAssertions;
-using System;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Services;

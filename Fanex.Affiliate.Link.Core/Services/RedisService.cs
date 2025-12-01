@@ -5,7 +5,7 @@ using StackExchange.Redis;
 
 namespace Fanex.Affiliate.Link.Core.Services;
 
-public class RedisService: IRedisService
+public class RedisService : IRedisService
 {
     private readonly IDatabase datatabse;
     private readonly AsyncRetryPolicy retryPolicy;
@@ -17,7 +17,7 @@ public class RedisService: IRedisService
         retryPolicy = Policy
             .Handle<RedisConnectionException>()
             .Or<RedisTimeoutException>()
-            .Or<RedisServerException>(ex => 
+            .Or<RedisServerException>(ex =>
                 ex.Message.Contains("READONLY"))
             .WaitAndRetryAsync(RetryCount, retryAttempt => TimeSpan.FromSeconds(1),
                 (_, _, _, _) =>

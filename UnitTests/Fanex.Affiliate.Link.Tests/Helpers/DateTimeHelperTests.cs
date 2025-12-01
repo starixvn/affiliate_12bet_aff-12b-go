@@ -109,7 +109,7 @@ public class DateTimeHelperTests
         // Arrange
         var customDateTimeOffset = new DateTimeOffset(2023, 12, 25, 15, 30, 45, TimeSpan.Zero);
         var originalProvider = DateTimeHelper.DateTimeOffsetProvider;
-        
+
         try
         {
             DateTimeHelper.DateTimeOffsetProvider = () => customDateTimeOffset;
@@ -133,7 +133,7 @@ public class DateTimeHelperTests
         // Arrange
         var customDateTimeOffset = new DateTimeOffset(2023, 12, 25, 15, 30, 45, TimeSpan.Zero);
         var originalProvider = DateTimeHelper.DateTimeOffsetProvider;
-        
+
         try
         {
             DateTimeHelper.DateTimeOffsetProvider = () => customDateTimeOffset;
@@ -157,7 +157,7 @@ public class DateTimeHelperTests
         // Arrange
         var customDateTimeOffset = new DateTimeOffset(2023, 12, 25, 15, 30, 45, TimeSpan.Zero);
         var originalProvider = DateTimeHelper.DateTimeOffsetProvider;
-        
+
         try
         {
             DateTimeHelper.DateTimeOffsetProvider = () => customDateTimeOffset;
@@ -182,7 +182,7 @@ public class DateTimeHelperTests
         // Arrange
         var customDateTimeOffset = new DateTimeOffset(2023, 12, 25, 15, 30, 45, TimeSpan.Zero);
         var originalProvider = DateTimeHelper.DateTimeOffsetProvider;
-        
+
         try
         {
             DateTimeHelper.DateTimeOffsetProvider = () => customDateTimeOffset;

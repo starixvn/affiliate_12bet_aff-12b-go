@@ -1,7 +1,6 @@
 using Fanex.Affiliate.Link.Core.Models;
 using Fanex.Affiliate.Link.Core.Services;
 using Fanex.Data.Repository;
-using FluentAssertions;
 using Moq;
 using Xunit;
 
@@ -25,7 +24,7 @@ public class DatabaseServiceTests
         ClickTrackingEvent? clickTrackingEvent = null;
 
         // Act & Assert
-        await Assert.ThrowsAsync<NullReferenceException>(() => 
+        await Assert.ThrowsAsync<NullReferenceException>(() =>
             _databaseService.InsertClickInfo(clickTrackingEvent!));
     }
 

@@ -1,7 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Fanex.Affiliate.Link.Consumer;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Commands;
 using Fanex.Affiliate.Link.Core.Models;
@@ -10,6 +6,9 @@ using FluentAssertions;
 using Moq;
 using ONEbook.UM.Models;
 using ONEbook.UM.Services;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Consumer.Tests;
@@ -70,7 +69,7 @@ public class ClickTrackingRedisStorageWorkerIntegrationTests
         }
 
         // Assert
-        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName), 
+        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName),
             Times.AtLeastOnce);
         _mockDatabaseService.Verify(x => x.InsertClickInfo(clickEvent), Times.Once);
     }
@@ -105,7 +104,7 @@ public class ClickTrackingRedisStorageWorkerIntegrationTests
 
         // Assert
         _mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeastOnce);
     }
 
@@ -151,7 +150,7 @@ public class ClickTrackingRedisStorageWorkerIntegrationTests
         _mockDatabaseService.Verify(x => x.InsertClickInfo(clickEvent1), Times.Once);
         _mockDatabaseService.Verify(x => x.InsertClickInfo(clickEvent2), Times.Once);
         _mockDatabaseService.Verify(x => x.InsertClickInfo(clickEvent3), Times.Once);
-        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName), 
+        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName),
             Times.AtLeast(4));
     }
 
@@ -188,7 +187,7 @@ public class ClickTrackingRedisStorageWorkerIntegrationTests
         // Assert
         _mockLogService.Verify(x => x.SentryErrorAsync(exception), Times.Once);
         _mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeastOnce);
     }
 
@@ -257,7 +256,7 @@ public class ClickTrackingRedisStorageWorkerIntegrationTests
         // Assert
         duration.Should().BeGreaterThan(TimeSpan.FromMilliseconds(300));
         _mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeastOnce);
     }
 
@@ -291,11 +290,11 @@ public class ClickTrackingRedisStorageWorkerIntegrationTests
         }
 
         // Assert - Should handle empty queue gracefully
-        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName), 
+        _mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName),
             Times.AtLeastOnce);
         _mockDatabaseService.Verify(x => x.InsertClickInfo(It.IsAny<ClickTrackingEvent>()), Times.Never);
         _mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeastOnce);
     }
 

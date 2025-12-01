@@ -1,7 +1,7 @@
 using Fanex.Affiliate.Link.Models;
 using FluentAssertions;
-using Xunit;
 using System;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Models;
 

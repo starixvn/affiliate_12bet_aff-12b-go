@@ -1,9 +1,8 @@
 using Fanex.Affiliate.Link.Constants;
 using FluentAssertions;
-using Xunit;
-using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Constants;
 
@@ -17,9 +16,9 @@ public class LandingPageTests
 
         // Assert
         supportedPages.Should().ContainKeys(
-            "signup", "home", "12sports/cricket", "exchange", "sportsbook", 
-            "promotion", "livecasino", "casino", "playtech", "numbergame", 
-            "keno", "lottery", "esports", "arcade", "p2p", "12sports/virtualsports", 
+            "signup", "home", "12sports/cricket", "exchange", "sportsbook",
+            "promotion", "livecasino", "casino", "playtech", "numbergame",
+            "keno", "lottery", "esports", "arcade", "p2p", "12sports/virtualsports",
             "mktsignup", "inrsignup"
         );
         supportedPages.Should().HaveCount(18);
@@ -65,7 +64,7 @@ public class LandingPageTests
     {
         // Act
         var signupPages = new[] { "signup", "mktsignup", "inrsignup" };
-        
+
         // Assert
         foreach (var page in signupPages)
         {
@@ -78,7 +77,7 @@ public class LandingPageTests
     {
         // Act
         var homePages = new[] { "home", "12sports/cricket", "exchange", "12sports/virtualsports" };
-        
+
         // Assert
         foreach (var page in homePages)
         {
@@ -91,7 +90,7 @@ public class LandingPageTests
     {
         // Act
         var casinoPages = new[] { "casino", "playtech" };
-        
+
         // Assert
         foreach (var page in casinoPages)
         {
@@ -104,7 +103,7 @@ public class LandingPageTests
     {
         // Act
         var gamePages = new[] { "arcade", "p2p" };
-        
+
         // Assert
         foreach (var page in gamePages)
         {
@@ -138,7 +137,7 @@ public class LandingPageTests
         // These page codes should exist as they are marketing-specific
         LandingPage.SupportedPageCodeOnV1.Should().ContainKey("mktsignup");
         LandingPage.SupportedPageCodeOnV1.Should().ContainKey("inrsignup");
-        
+
         // Both should map to join
         LandingPage.SupportedPageCodeOnV1["mktsignup"].Should().Be("join");
         LandingPage.SupportedPageCodeOnV1["inrsignup"].Should().Be("join");

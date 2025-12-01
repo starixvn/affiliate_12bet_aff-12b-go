@@ -1,8 +1,4 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using EasyNetQ;
-using Fanex.Affiliate.Link.Consumer;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Commands;
 using Fanex.Affiliate.Link.Core.Models;
@@ -11,6 +7,9 @@ using FluentAssertions;
 using Moq;
 using ONEbook.UM.Models;
 using ONEbook.UM.Services;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Consumer.Tests;
@@ -63,7 +62,7 @@ public class WorkerLifecycleTests
         // Assert
         duration.Should().BeGreaterThan(TimeSpan.FromMilliseconds(200));
         mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeastOnce);
     }
 
@@ -117,7 +116,7 @@ public class WorkerLifecycleTests
         // Assert
         mockDatabaseService.Verify(x => x.InsertClickInfo(clickEvent1), Times.Once);
         mockDatabaseService.Verify(x => x.InsertClickInfo(clickEvent2), Times.Once);
-        mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName), 
+        mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(Constants.CacheRedisQueueName),
             Times.AtLeast(3));
     }
 
@@ -165,7 +164,7 @@ public class WorkerLifecycleTests
         // Assert
         mockLogService.Verify(x => x.SentryErrorAsync(exception), Times.Once);
         mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeastOnce);
     }
 
@@ -209,7 +208,7 @@ public class WorkerLifecycleTests
         mockRedisService.Verify(x => x.ListLeftPopAsync<ClickTrackingEvent>(It.IsAny<string>()), Times.Never);
         mockDatabaseService.Verify(x => x.InsertClickInfo(It.IsAny<ClickTrackingEvent>()), Times.Never);
         mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeastOnce);
     }
 
@@ -281,7 +280,7 @@ public class WorkerLifecycleTests
         }
 
         mockLogService.Verify(x => x.LogFileMessage(
-            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))), 
+            It.Is<string>(s => s.Contains("ClickTrackingRedisStorageWorker running at:"))),
             Times.AtLeast(3));
     }
 

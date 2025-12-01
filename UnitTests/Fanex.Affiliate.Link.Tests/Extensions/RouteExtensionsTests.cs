@@ -1,10 +1,4 @@
-using Fanex.Affiliate.Link.Extensions;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Xunit;
-using FluentAssertions;
 
 namespace Fanex.Affiliate.Link.Tests.Extensions;
 

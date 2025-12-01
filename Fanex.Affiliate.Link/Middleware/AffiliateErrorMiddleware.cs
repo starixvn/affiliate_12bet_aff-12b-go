@@ -1,5 +1,4 @@
 using Fanex.Affiliate.Link.Constants;
-using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace Fanex.Affiliate.Link.Middleware
@@ -14,11 +13,11 @@ namespace Fanex.Affiliate.Link.Middleware
         private readonly ILogger<AffiliateErrorMiddleware> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         private const string Incorrect_Link_Format = "This link is in an incorrect format. Please contact administrator!";
-        
+
         // HTTP Status Codes
         private const int HttpStatusNotFound = 404;
         private const int HttpStatusOk = 200;
-        
+
         // Segment validation constants
         private const int MinimumSegmentCount = 3;
         private const int ThreeSegmentPattern = 3;
@@ -61,7 +60,7 @@ namespace Fanex.Affiliate.Link.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogInformation("WriteLogRequest error", ex);
+                _logger.LogInformation(ex, "Write Log Request error:");
             }
         }
 
@@ -113,7 +112,7 @@ namespace Fanex.Affiliate.Link.Middleware
             await context.Response.WriteAsync(html, Encoding.UTF8);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S3995:Change this return type to 'System.Uri'", 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("SonarQube", "S3995:Change this return type to 'System.Uri'",
             Justification = "This method analyzes URL paths and returns error messages, not URLs")]
         private string AnalyzeAffiliateUrlError(string path)
         {

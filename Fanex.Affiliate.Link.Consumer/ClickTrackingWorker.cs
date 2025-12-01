@@ -91,7 +91,7 @@ public sealed class ClickTrackingWorker(
                 if (!result.IsSuccessful)
                 {
                     var errMessage = await ProcessMessageWhenError(message);
-                    await logService.SentryErrorAsync($"{ errMessage } - { result.ErrorMessage }");
+                    await logService.SentryErrorAsync($"{errMessage} - {result.ErrorMessage}");
                 }
 
                 await Task.FromResult(AckStrategies.Ack);
@@ -163,7 +163,7 @@ public sealed class ClickTrackingWorker(
             .AsAutoDelete(false)
             .WithArgument("x-queue-type", "quorum")
         );
-        
+
         await bus.Advanced.BindAsync(mainExchange, mainQueue, Constants.RoutingKey);
         await bus.Advanced.BindAsync(retryExchange, retryQueue, Constants.RoutingKey);
         await bus.Advanced.BindAsync(errorExchange, errorQueue, Constants.RoutingKey);

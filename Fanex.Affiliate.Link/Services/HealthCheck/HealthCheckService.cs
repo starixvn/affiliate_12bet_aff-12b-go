@@ -1,6 +1,5 @@
 namespace Fanex.Affiliate.Link.Services.HealthCheck
 {
-    using System.Diagnostics;
     using Constants;
     using Fanex.Affiliate.Link.Core.Services.Interfaces;
     using Fanex.Affiliate.Link.Criterias;
@@ -8,6 +7,7 @@ namespace Fanex.Affiliate.Link.Services.HealthCheck
     using Fanex.Data.Repository;
     using Models.HealthCheck;
     using ONEbook.UM.Services;
+    using System.Diagnostics;
 
     /// <summary>
     /// Comprehensive health check service implementation

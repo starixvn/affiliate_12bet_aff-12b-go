@@ -1,7 +1,7 @@
 using Fanex.Affiliate.Link.Extensions;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using System.Net;
-using FluentAssertions;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Extensions;

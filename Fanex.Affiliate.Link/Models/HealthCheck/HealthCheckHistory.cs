@@ -37,7 +37,7 @@ namespace Fanex.Affiliate.Link.Models.HealthCheck
         public int WarningChecks { get; set; }
         public int UnhealthyChecks { get; set; }
         private const double PercentageMultiplier = 100.0;
-        
+
         public double UptimePercent => TotalChecks > 0 ? (double)HealthyChecks / TotalChecks * PercentageMultiplier : 0;
         public Dictionary<string, ComponentSummary> ComponentSummaries { get; set; } = new();
     }

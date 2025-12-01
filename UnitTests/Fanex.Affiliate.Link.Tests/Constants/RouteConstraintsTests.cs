@@ -1,9 +1,9 @@
 using Fanex.Affiliate.Link.Constants;
 using FluentAssertions;
-using System.Text.RegularExpressions;
-using Xunit;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Constants;
 
@@ -124,11 +124,11 @@ public class RouteConstraintsTests
         pattern.Should().Contain("hien");
         pattern.Should().Contain("hitg");
         pattern.Should().Contain("mycs");
-        
+
         // Verify that longer patterns appear before shorter ones in the pattern
         var enPosition = pattern.IndexOf("|en|", StringComparison.Ordinal);
         var eneuroPosition = pattern.IndexOf("eneuro", StringComparison.Ordinal);
-        
+
         if (enPosition >= 0 && eneuroPosition >= 0)
         {
             eneuroPosition.Should().BeLessThan(enPosition, "eneuro should appear before en in the pattern");

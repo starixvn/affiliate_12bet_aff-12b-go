@@ -1,6 +1,6 @@
-using System;
 using Fanex.Affiliate.Link.Core.Models;
 using FluentAssertions;
+using System;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Consumer.Tests;

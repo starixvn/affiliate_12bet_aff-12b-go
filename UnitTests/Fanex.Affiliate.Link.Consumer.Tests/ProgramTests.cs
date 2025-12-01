@@ -1,14 +1,9 @@
-using System;
-using Fanex.Affiliate.Link.Consumer;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Services;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Http;
-using Microsoft.Extensions.Http.Logging;
 using ONEbook.UM.Services;
 using Xunit;
 
@@ -33,7 +28,7 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         // Register services as in Program.cs
         builder.Services.AddHostedService<ClickTrackingRedisStorageWorker>();
         builder.Services.AddSingleton<IMaintenanceService, MaintenanceService>();
@@ -51,7 +46,7 @@ public class ProgramTests
     {
         // Arrange & Act
         var builder = WebApplication.CreateBuilder();
-        
+
         builder.Services.AddSingleton<IMaintenanceService, MaintenanceService>();
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<IRedisService, RedisService>();
@@ -80,7 +75,7 @@ public class ProgramTests
     {
         // Arrange & Act & Assert - Should not throw
         var builder = WebApplication.CreateBuilder();
-        
+
         builder.Services.AddSingleton<IMaintenanceService, MaintenanceService>();
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<IRedisService, RedisService>();

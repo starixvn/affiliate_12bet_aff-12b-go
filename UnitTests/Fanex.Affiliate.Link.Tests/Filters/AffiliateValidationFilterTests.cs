@@ -1,5 +1,6 @@
 using Fanex.Affiliate.Link.Filters;
 using Fanex.Affiliate.Link.Services.Interface;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -7,10 +8,9 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Moq;
-using FluentAssertions;
-using Xunit;
 using System;
 using System.Collections.Generic;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Filters;
 
@@ -149,7 +149,7 @@ public class AffiliateValidationFilterTests
         var httpContext = new DefaultHttpContext();
         var actionDescriptor = new ActionDescriptor();
         var actionContext = new ActionContext(httpContext, new RouteData(), actionDescriptor);
-        
+
         return new ActionExecutingContext(
             actionContext,
             new List<IFilterMetadata>(),

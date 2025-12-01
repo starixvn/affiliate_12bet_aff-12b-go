@@ -1,6 +1,6 @@
+using Fanex.Affiliate.Link.Models;
 using Fanex.Affiliate.Link.Services.Impl;
 using Fanex.Affiliate.Link.Services.Interface;
-using Fanex.Affiliate.Link.Models;
 using FluentAssertions;
 using Xunit;
 
@@ -112,7 +112,7 @@ public class UnderMaintenanceServiceEnhancedTests
         };
 
         // Assert
-        results.Should().AllSatisfy(result => 
+        results.Should().AllSatisfy(result =>
         {
             result.IsUnderMaintenance.Should().BeFalse();
             result.Message.Should().Be("System is operational");

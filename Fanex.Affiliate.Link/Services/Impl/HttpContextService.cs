@@ -162,7 +162,7 @@ namespace Fanex.Affiliate.Link.Services.Impl
                 return @"Computer/Laptop";
             }
 
-            var deviceKey = _deviceMapping.Keys.FirstOrDefault(key => 
+            var deviceKey = _deviceMapping.Keys.FirstOrDefault(key =>
                 userAgent.ToLower(CultureInfo.InvariantCulture).Contains(key, StringComparison.OrdinalIgnoreCase));
 
             if (string.IsNullOrEmpty(deviceKey))
@@ -187,7 +187,7 @@ namespace Fanex.Affiliate.Link.Services.Impl
             }
 
             // Try to get the User-Agent header
-            var userAgent = request.Headers["User-Agent"].FirstOrDefault();
+            var userAgent = request.Headers.UserAgent.FirstOrDefault();
             if (string.IsNullOrEmpty(userAgent))
             {
                 return false;
@@ -205,7 +205,7 @@ namespace Fanex.Affiliate.Link.Services.Impl
                 @"(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|" +
                 @"ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|" +
                 @"phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|" +
-                @"windows ce|xda|xiino", 
+                @"windows ce|xda|xiino",
                 RegexOptions.IgnoreCase | RegexOptions.Multiline, TimeSpan.FromSeconds(1));
             var v = new Regex(
                 @"1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|" +
@@ -225,7 +225,7 @@ namespace Fanex.Affiliate.Link.Services.Impl
                 @"sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|" +
                 @"ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|" +
                 @"utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|" +
-                @"w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-", 
+                @"w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-",
                 RegexOptions.IgnoreCase | RegexOptions.Multiline, TimeSpan.FromSeconds(1));
 
             // Check for mobile device patterns

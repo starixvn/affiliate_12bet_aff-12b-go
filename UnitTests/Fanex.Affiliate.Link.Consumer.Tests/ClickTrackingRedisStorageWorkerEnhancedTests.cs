@@ -1,7 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Fanex.Affiliate.Link.Consumer;
 using Fanex.Affiliate.Link.Core;
 using Fanex.Affiliate.Link.Core.Commands;
 using Fanex.Affiliate.Link.Core.Models;
@@ -10,6 +6,9 @@ using FluentAssertions;
 using Moq;
 using ONEbook.UM.Models;
 using ONEbook.UM.Services;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Fanex.Affiliate.Link.Consumer.Tests;
@@ -81,9 +80,9 @@ public class ClickTrackingRedisStorageWorkerEnhancedTests
         _mockMaintenanceService.Setup(x => x.GetUnderMaintenanceTime()).Returns(maintenanceTime);
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
         await task;
 
@@ -108,9 +107,9 @@ public class ClickTrackingRedisStorageWorkerEnhancedTests
             .ReturnsAsync(new CommandResult { ErrorCode = 0, ErrorMessage = string.Empty });
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
         await task;
 
@@ -131,9 +130,9 @@ public class ClickTrackingRedisStorageWorkerEnhancedTests
             .ThrowsAsync(exception);
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
         await task;
 
@@ -160,9 +159,9 @@ public class ClickTrackingRedisStorageWorkerEnhancedTests
             .ReturnsAsync(new CommandResult { ErrorCode = 0, ErrorMessage = string.Empty });
 
         // Act
-        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer", 
+        var startConsumerMethod = typeof(ClickTrackingRedisStorageWorker).GetMethod("StartConsumer",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
+
         var task = (Task)startConsumerMethod!.Invoke(_worker, null)!;
         await task;
 

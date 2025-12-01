@@ -29,12 +29,12 @@ namespace Fanex.Affiliate.Link.Models.HealthCheck
         private const double DefaultDatabaseResponseTimeMs = 1000;
         private const double DefaultRedisResponseTimeMs = 100;
         private const double DefaultRouteConstraintResponseTimeMs = 1;
-        
+
         // Memory and thread thresholds
         private const long DefaultMemoryUsageMB = 500;
         private const int DefaultActiveThreadsWarning = 100;
         private const int DefaultActiveThreadsCritical = 200;
-        
+
         public double DatabaseResponseTimeMs { get; set; } = DefaultDatabaseResponseTimeMs;
         public double RedisResponseTimeMs { get; set; } = DefaultRedisResponseTimeMs;
         public double RouteConstraintResponseTimeMs { get; set; } = DefaultRouteConstraintResponseTimeMs;

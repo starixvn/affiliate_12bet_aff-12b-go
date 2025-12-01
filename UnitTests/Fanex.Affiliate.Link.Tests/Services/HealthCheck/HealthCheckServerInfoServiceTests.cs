@@ -2,12 +2,12 @@ using Fanex.Affiliate.Link.Services.HealthCheck;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
-using Moq;
-using Xunit;
-using System.Threading.Tasks;
-using System.Net;
 using Microsoft.Extensions.Logging;
+using Moq;
 using System;
+using System.Net;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Services.HealthCheck;
 
@@ -23,9 +23,9 @@ public class HealthCheckServerInfoServiceTests
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockEnvironment = new Mock<IHostEnvironment>();
         _mockLogger = new Mock<ILogger<HealthCheckServerInfoService>>();
-        
+
         _mockEnvironment.Setup(x => x.EnvironmentName).Returns("Test");
-        
+
         _service = new HealthCheckServerInfoService(
             _mockHttpContextAccessor.Object,
             _mockEnvironment.Object,
@@ -86,7 +86,7 @@ public class HealthCheckServerInfoServiceTests
         result.Should().ContainKey("Env");
         result["Env"].Should().Be("Test");
         result.Should().ContainKey("Server Time");
-        
+
         // Verify that logging was called (the exact log level and message may vary)
         _mockLogger.Verify(
             x => x.Log(
@@ -94,7 +94,7 @@ public class HealthCheckServerInfoServiceTests
                 It.IsAny<EventId>(),
                 It.IsAny<It.IsAnyType>(),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.AtLeastOnce);
     }
 
@@ -120,7 +120,7 @@ public class HealthCheckServerInfoServiceTests
         // Arrange
         var httpContext = new DefaultHttpContext();
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
-        
+
         // Mock Dns.GetHostName to throw exception
         // Note: This is difficult to test directly due to static methods
         // The test verifies the service handles exceptions gracefully
@@ -137,7 +137,7 @@ public class HealthCheckServerInfoServiceTests
     public void GetBasicServerInfo_ShouldReturnMinimalDictionary()
     {
         // Arrange
-        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext)null);
 
         // Act
         var result = _service.GetBasicServerInfo();
@@ -163,14 +163,14 @@ public class HealthCheckServerInfoServiceTests
         result.Should().ContainKey("Env");
         result.Should().ContainKey("Server Time");
         result["Env"].Should().Be("Unknown");
-        
+
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Failed to retrieve basic server information")),
                 It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
     }
 
@@ -178,7 +178,7 @@ public class HealthCheckServerInfoServiceTests
     public void GetBasicServerInfo_ShouldHandleAssemblyCreationTimeException()
     {
         // Arrange
-        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext)null);
 
         // Act
         var result = _service.GetBasicServerInfo();
@@ -187,7 +187,7 @@ public class HealthCheckServerInfoServiceTests
         result.Should().NotBeNull();
         result.Should().ContainKey("Env");
         result.Should().ContainKey("Server Time");
-        
+
         // The service should handle assembly creation time exceptions gracefully
         // and still return basic information
     }
@@ -202,7 +202,7 @@ public class HealthCheckServerInfoServiceTests
         httpContext.Connection.RemoteIpAddress = IPAddress.Parse("192.168.1.1");
         httpContext.Request.Host = new HostString("localhost:8080");
         httpContext.Request.Scheme = "https";
-        
+
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
@@ -221,7 +221,7 @@ public class HealthCheckServerInfoServiceTests
     public async Task GetServerInfoAsync_ShouldHandleNullHttpContext()
     {
         // Arrange
-        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext)null);
 
         // Act
         var result = await _service.GetServerInfoAsync();
@@ -238,7 +238,7 @@ public class HealthCheckServerInfoServiceTests
         // Arrange
         var httpContext = new DefaultHttpContext();
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
-        
+
         // Mock HttpContext to throw exception when accessing properties
         // Note: Connection property is read-only, so we can't directly mock it
         // This test verifies the service handles HttpContext exceptions gracefully
@@ -256,7 +256,7 @@ public class HealthCheckServerInfoServiceTests
     public void GetBasicServerInfo_ShouldReturnReadOnlyDictionary()
     {
         // Arrange
-        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext)null);
 
         // Act
         var result = _service.GetBasicServerInfo();
@@ -283,7 +283,7 @@ public class HealthCheckServerInfoServiceTests
     public void GetBasicServerInfo_ShouldIncludeServerTime()
     {
         // Arrange
-        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+        _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext)null);
 
         // Act
         var result = _service.GetBasicServerInfo();
@@ -313,7 +313,7 @@ public class HealthCheckServerInfoServiceTests
     {
         // Arrange
         _mockEnvironment.Setup(x => x.EnvironmentName).Throws(new Exception("Environment error"));
-        
+
         // Act
         var result = _service.GetBasicServerInfo();
 

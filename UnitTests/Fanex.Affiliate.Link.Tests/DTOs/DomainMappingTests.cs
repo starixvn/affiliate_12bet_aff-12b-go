@@ -94,7 +94,7 @@ public class DomainMappingTests
     [InlineData("domain2.com", "es", "https://domain2.com/es", "redirect2.com", false, true, true, "456,789")]
     [InlineData("domain3.com", "fr", "", "redirect3.com", true, true, false, "")]
     [InlineData("", "", "", "", false, false, false, null)]
-    public void DomainMapping_ShouldHandleVariousValues(string affDomain, string languageCode, string languageLink, 
+    public void DomainMapping_ShouldHandleVariousValues(string affDomain, string languageCode, string languageLink,
         string redirectDomain, bool isSSL, bool isMobile, bool isExcluded, string dealIds)
     {
         // Arrange & Act

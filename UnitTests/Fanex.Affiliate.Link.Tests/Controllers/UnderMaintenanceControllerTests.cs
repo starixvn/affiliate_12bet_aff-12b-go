@@ -1,6 +1,4 @@
-using System;
 using Fanex.Affiliate.Link.Controllers;
-using Fanex.Affiliate.Link.Models;
 using Fanex.Affiliate.Link.Services.Interface;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;

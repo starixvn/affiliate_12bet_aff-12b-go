@@ -3,9 +3,9 @@ using Fanex.Affiliate.Link.Services.HealthCheck;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Xunit;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Services.HealthCheck;
 

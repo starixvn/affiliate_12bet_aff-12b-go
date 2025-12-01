@@ -1,9 +1,9 @@
 using Fanex.Affiliate.Link.Constants;
 using FluentAssertions;
-using Xunit;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Constants;
 

@@ -1,16 +1,14 @@
+using EasyNetQ;
 using Fanex.Affiliate.Link.Core.Services.Interfaces;
 using Fanex.Affiliate.Link.Workers;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Moq;
 using FluentAssertions;
-using Xunit;
+using Microsoft.Extensions.Configuration;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using EasyNetQ;
-using EasyNetQ.Topology;
+using Xunit;
 
 namespace Fanex.Affiliate.Link.Tests.Workers;
 
@@ -35,7 +33,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
         _mockLogService.Setup(x => x.SentryErrorAsync(It.IsAny<string>(), It.IsAny<Exception>())).Returns(Task.CompletedTask);
         _mockLogService.Setup(x => x.LogFileMessage(It.IsAny<string>())).Verifiable();
         _mockLogService.Setup(x => x.LogFileError(It.IsAny<Exception>())).Verifiable();
-        
+
         _mockRabbitBus.Setup(x => x.SetBus(It.IsAny<IAdvancedBus>())).Verifiable();
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync()).Returns(Task.CompletedTask);
     }
@@ -237,7 +235,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new InvalidOperationException("Connection failed"));
 
@@ -358,7 +356,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new TimeoutException("Connection timeout"));
 
@@ -383,7 +381,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync((Exception)null!);
 
@@ -407,7 +405,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new InvalidOperationException("Connection failed"));
 
@@ -492,7 +490,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         // Setup successful connection
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .Returns(Task.CompletedTask);
@@ -518,11 +516,11 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         // Setup to fail first, then succeed
         var callCount = 0;
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
-            .Returns(() => 
+            .Returns(() =>
             {
                 callCount++;
                 if (callCount == 1)
@@ -553,7 +551,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new OperationCanceledException("Operation was canceled"));
 
@@ -578,10 +576,10 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         var innerException = new InvalidOperationException("Inner exception");
         var aggregateException = new AggregateException("Multiple exceptions", innerException);
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(aggregateException);
 
@@ -606,7 +604,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new TaskCanceledException("Task was canceled"));
 
@@ -631,7 +629,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new ObjectDisposedException("Object", "Object has been disposed"));
 
@@ -653,7 +651,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
@@ -678,7 +676,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new System.Net.Sockets.SocketException(10061, "Connection refused"));
 
@@ -703,7 +701,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new System.Net.WebException("Web exception occurred"));
 
@@ -728,10 +726,10 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         var callCount = 0;
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
-            .Returns(() => 
+            .Returns(() =>
             {
                 callCount++;
                 switch (callCount)
@@ -895,7 +893,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
         // Setup rabbit bus to succeed on reconnection
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync()).Returns(Task.CompletedTask);
-        
+
         var service = new RabbitMqBusHostedService(
             _mockLogService.Object,
             configuration,
@@ -961,11 +959,11 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         // Setup rabbit bus to fail on reconnection
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
             .ThrowsAsync(new InvalidOperationException("Connection failed"));
-        
+
         var service = new RabbitMqBusHostedService(
             _mockLogService.Object,
             configuration,
@@ -992,15 +990,15 @@ public class RabbitMqBusHostedServiceTests : IDisposable
     {
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
-        
+
         // Setup rabbit bus to delay and then be cancelled
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync())
-            .Returns(async () => 
+            .Returns(async () =>
             {
                 await Task.Delay(1000); // Long delay
                 return Task.CompletedTask;
             });
-        
+
         var service = new RabbitMqBusHostedService(
             _mockLogService.Object,
             configuration,
@@ -1027,7 +1025,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
         // Arrange
         var configuration = CreateConfiguration("host=localhost;username=guest;password=guest");
         _mockRabbitBus.Setup(x => x.RegisterQueueAsync()).Returns(Task.CompletedTask);
-        
+
         var service = new RabbitMqBusHostedService(
             _mockLogService.Object,
             configuration,
@@ -1060,7 +1058,7 @@ public class RabbitMqBusHostedServiceTests : IDisposable
                 }
                 return Task.CompletedTask;
             });
-        
+
         var service = new RabbitMqBusHostedService(
             _mockLogService.Object,
             configuration,
